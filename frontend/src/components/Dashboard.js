@@ -9,7 +9,6 @@ import CoursesList from './dashboard/CoursesList';
 import RoomsList from './dashboard/RoomsList';
 import UserProfile from './dashboard/UserProfile';
 import CalendarView from './dashboard/CalendarView';
-import SampleDataButton from './dashboard/SampleDataButton';
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -127,14 +126,6 @@ const Dashboard = () => {
             This system helps you manage and schedule university exams efficiently.
             Use the navigation to access different features based on your role.
           </p>
-          
-          {/* Add sample data button for secretariat users */}
-          {role === 'SECRETARIAT' && (
-            <SampleDataButton onSuccess={() => {
-              // Refresh stats after adding sample data
-              fetchStats();
-            }} />
-          )}
         </section>
 
         <div className="stats-cards">
