@@ -51,6 +51,9 @@ const CoursesList = () => {
           name: course.name || '',
           profesor_name: course.profesor_name || '',
           credits: course.credits || '',
+          year: course.year || '',
+          semester: course.semester || '',
+          description: course.description || '',
           // Create a virtual professor object for display purposes
           professor: { name: course.profesor_name || 'N/A' }
         };

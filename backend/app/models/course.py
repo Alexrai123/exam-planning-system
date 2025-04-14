@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from ..db.base import Base
 
@@ -9,6 +9,9 @@ class Course(Base):
     name = Column(String(100), nullable=False)
     profesor_name = Column(String(100), ForeignKey("professors.name"), nullable=False)
     credits = Column(Integer, nullable=True)
+    year = Column(Integer, nullable=True)
+    semester = Column(Integer, nullable=True)
+    description = Column(Text, nullable=True)
     
     # Relationships
     professor = relationship("Professor", back_populates="courses")
