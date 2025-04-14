@@ -5,8 +5,8 @@ services:
     image: postgres:14
     container_name: exam_planning_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
       POSTGRES_DB: exam_planning
     ports:
       - "5432:5432"
@@ -22,7 +22,7 @@ services:
     depends_on:
       - postgres
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/exam_planning
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-changeme}@postgres:5432/exam_planning
       - SECRET_KEY=your_secret_key_here
       - JWT_SECRET_KEY=your_jwt_secret_key_here
       - MAIL_SERVER=smtp.example.com
