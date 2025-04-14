@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Any
 
 from ..db.base import get_db
-from ..models.user import User
+from ..models.user import User, UserRole
 from ..schemas.user import UserResponse, UserCreate, UserUpdate
 from ..routes.auth import get_current_user, is_secretariat
 from ..core.security import get_password_hash
@@ -98,3 +98,16 @@ def delete_user(
     db.delete(user)
     db.commit()
     return None
+
+@router.get("/students", response_model=List[UserResponse])
+def get_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(is_secretariat),
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    Retrieve all students. Only secretariat can access this endpoint.
+    """
+    students = db.query(User).filter(User.role == UserRole.STUDENT).offset(skip).limit(limit).all()
+    return students

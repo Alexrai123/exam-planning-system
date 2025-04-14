@@ -8,6 +8,7 @@ class Course(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     profesor_name = Column(String(100), ForeignKey("professors.name"), nullable=False)
+    faculty_id = Column(String(10), ForeignKey("faculties.id"), nullable=True)
     credits = Column(Integer, nullable=True)
     year = Column(Integer, nullable=True)
     semester = Column(Integer, nullable=True)
@@ -15,6 +16,7 @@ class Course(Base):
     
     # Relationships
     professor = relationship("Professor", back_populates="courses")
+    faculty = relationship("Faculty")
     exams = relationship("Exam", back_populates="course")
     
     def __repr__(self):

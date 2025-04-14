@@ -7,6 +7,7 @@ import './Dashboard.css';
 import ExamsList from './dashboard/ExamsList';
 import CoursesList from './dashboard/CoursesList';
 import RoomsList from './dashboard/RoomsList';
+import GroupsList from './dashboard/GroupsList';
 import UserProfile from './dashboard/UserProfile';
 import CalendarView from './dashboard/CalendarView';
 import UserDebug from './dashboard/UserDebug';
@@ -106,6 +107,8 @@ const Dashboard = () => {
         return <CoursesList />;
       case 'rooms':
         return <RoomsList />;
+      case 'groups':
+        return <GroupsList />;
       case 'profile':
         return <UserProfile userData={userData} />;
       case 'calendar':
@@ -279,6 +282,11 @@ const Dashboard = () => {
             <li className={activeTab === 'rooms' ? 'active' : ''}>
               <button onClick={() => setActiveTab('rooms')}>
                 <i className="fas fa-door-open"></i> Rooms
+              </button>
+            </li>
+            <li className={activeTab === 'groups' ? 'active' : ''}>
+              <button onClick={() => setActiveTab('groups')}>
+                <i className="fas fa-users"></i> Groups
               </button>
             </li>
             <li className={activeTab === 'calendar' ? 'active' : ''}>

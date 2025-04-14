@@ -1,0 +1,68 @@
+// Database schema for Exam Planning System
+// Use this code at https://dbdiagram.io to visualize the schema
+
+Table users {
+  id integer [pk, increment]
+  name varchar(100) [not null]
+  email varchar(100) [unique, not null]
+  password varchar [not null]
+  role enum('STUDENT', 'PROFESSOR', 'SECRETARIAT') [not null]
+
+  indexes {
+    email [name: 'users_email_idx']
+  }
+}
+
+Table professors {
+  name varchar(100) [pk]
+  specialization varchar(100)
+  title varchar(50)
+  user_id integer
+}
+
+Table grupa {
+  name varchar(50) [pk]
+  year integer
+  specialization varchar(100)
+  leader_id integer
+}
+
+Table sala {
+  name varchar(50) [pk]
+  capacity integer
+  building varchar(50)
+  floor integer
+}
+
+Table courses {
+  id integer [pk, increment]
+  name varchar(100) [not null]
+  profesor_name varchar(100) [not null]
+  credits integer
+}
+
+Table exams {
+  id integer [pk, increment]
+  course_id integer [not null]
+  grupa_name varchar(50) [not null]
+  date date [not null]
+  time time [not null]
+  sala_name varchar(50) [not null]
+  status enum('PROPOSED', 'CONFIRMED', 'CANCELLED', 'COMPLETED') [not null]
+
+  indexes {
+    date [name: 'exams_date_idx']
+    status [name: 'exams_status_idx']
+    course_id [name: 'exams_course_idx']
+    grupa_name [name: 'exams_grupa_idx']
+    sala_name [name: 'exams_sala_idx']
+  }
+}
+
+// Define relationships separately
+Ref: professors.user_id > users.id
+Ref: grupa.leader_id > users.id
+Ref: courses.profesor_name > professors.name
+Ref: exams.course_id > courses.id
+Ref: exams.grupa_name > grupa.name
+Ref: exams.sala_name > sala.name

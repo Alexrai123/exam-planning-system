@@ -8,6 +8,7 @@ from ..core.security import create_access_token, verify_password
 from ..core.config import settings
 from ..db.base import get_db
 from ..models.user import User, UserRole
+from ..models.grupa import Grupa
 from ..schemas.auth import Token, UserCreate, UserLogin
 from ..schemas.user import UserResponse
 
@@ -120,9 +121,31 @@ def is_secretariat(current_user: User = Depends(get_current_user)) -> User:
     """
     Check if user is from secretariat
     """
-    if current_user.role != UserRole.SECRETARIAT:
+    if current_user.role.upper() != UserRole.SECRETARIAT:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+    return current_user
+
+# Dependency to check if user is a group leader
+def is_group_leader(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> User:
+    """
+    Check if user is a group leader
+    """
+    if current_user.role.upper() != UserRole.STUDENT:
+        # If not a student, they can't be a group leader
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only students can be group leaders",
+        )
+    
+    # Check if the user is a leader of any group
+    group = db.query(Grupa).filter(Grupa.leader_id == current_user.id).first()
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not a group leader",
+        )
+    
     return current_user

@@ -9,8 +9,9 @@ from ..models.exam import Exam, ExamStatus
 from ..models.course import Course
 from ..models.sala import Sala
 from ..models.grupa import Grupa
+from ..models.user import User, UserRole
 from ..schemas.exam import ExamResponse, ExamCreate, ExamUpdate, ExamStatusUpdate
-from ..routes.auth import get_current_user, is_secretariat, is_professor
+from ..routes.auth import get_current_user, is_secretariat, is_professor, is_group_leader
 from ..services.email import send_exam_notification
 
 router = APIRouter(prefix="/exams", tags=["Exams"])
@@ -53,10 +54,10 @@ def get_exams(
 def create_exam(
     exam_in: ExamCreate,
     db: Session = Depends(get_db),
-    current_user: Any = Depends(is_secretariat)
+    current_user: Any = Depends(get_current_user)
 ) -> Any:
     """
-    Create a new exam. Only secretariat can access this endpoint.
+    Create a new exam. Secretariat can create confirmed exams, group leaders can propose exams.
     """
     # Check if course exists
     course = db.query(Course).filter(Course.id == exam_in.course_id).first()
@@ -108,8 +109,37 @@ def create_exam(
             detail="Group already has an exam at the specified date and time"
         )
     
-    # Create exam
-    exam = Exam(**exam_in.dict())
+    # Check user permissions and set appropriate status
+    is_secretariat_user = current_user.role.upper() == UserRole.SECRETARIAT
+    is_leader = False
+    
+    if not is_secretariat_user:
+        # Check if user is a group leader for this specific group
+        if current_user.role.upper() != UserRole.STUDENT:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only secretariat or group leaders can create exams"
+            )
+        
+        # Check if the user is the leader of the group specified in the exam
+        if grupa.leader_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only create exams for groups you lead"
+            )
+        
+        is_leader = True
+    
+    # Create exam with appropriate status
+    exam_data = exam_in.dict()
+    if is_leader:
+        # Group leaders can only propose exams
+        exam_data["status"] = ExamStatus.PROPOSED
+    elif is_secretariat_user and not exam_data.get("status"):
+        # Secretariat creates confirmed exams by default
+        exam_data["status"] = ExamStatus.CONFIRMED
+    
+    exam = Exam(**exam_data)
     db.add(exam)
     db.commit()
     db.refresh(exam)

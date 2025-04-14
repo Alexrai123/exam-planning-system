@@ -9,6 +9,9 @@ class Professor(Base):
     name = Column(String(100), primary_key=True, index=True)
     specialization = Column(String(100), nullable=True)
     title = Column(String(50), nullable=True)
+    email = Column(String(100), nullable=True)
+    phone = Column(String(20), nullable=True)
+    faculty = Column(String(100), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     # Relationships

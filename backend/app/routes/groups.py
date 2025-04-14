@@ -4,7 +4,9 @@ from typing import List, Any
 
 from ..db.base import get_db
 from ..models.grupa import Grupa
+from ..models.user import User, UserRole
 from ..schemas.grupa import GrupaResponse, GrupaCreate, GrupaUpdate
+from ..schemas.user import UserResponse
 from ..routes.auth import get_current_user, is_secretariat
 
 router = APIRouter(prefix="/groups", tags=["Groups"])
@@ -84,6 +86,44 @@ def update_group(
         setattr(group, field, value)
     
     db.add(group)
+    db.commit()
+    db.refresh(group)
+    return group
+
+@router.put("/{group_name}/leader", response_model=GrupaResponse)
+def assign_group_leader(
+    group_name: str,
+    leader_id: int,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(is_secretariat)
+) -> Any:
+    """
+    Assign a leader to a group. Only secretariat can access this endpoint.
+    """
+    # Check if group exists
+    group = db.query(Grupa).filter(Grupa.name == group_name).first()
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    # Check if user exists and is a student
+    user = db.query(User).filter(User.id == leader_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only students can be group leaders"
+        )
+    
+    # Assign the leader
+    group.leader_id = leader_id
     db.commit()
     db.refresh(group)
     return group
