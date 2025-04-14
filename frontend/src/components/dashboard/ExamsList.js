@@ -21,6 +21,9 @@ const ExamsList = () => {
   const [rooms, setRooms] = useState([]);
   const [professors, setProfessors] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [selectedFaculty, setSelectedFaculty] = useState('');
+  const [filteredCourses, setFilteredCourses] = useState([]);
   
   // Form state for create/edit
   const [formData, setFormData] = useState({
@@ -78,32 +81,81 @@ const ExamsList = () => {
   const fetchRelatedData = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        setError('No authentication token found');
+        return;
+      }
 
       // Fetch courses
-      const coursesResponse = await axios.get('http://localhost:8000/api/v1/courses/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCourses(coursesResponse.data);
+      try {
+        console.log('Fetching courses...');
+        const coursesResponse = await axios.get('http://localhost:8000/api/v1/courses/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Courses response:', coursesResponse);
+        
+        if (coursesResponse.data && Array.isArray(coursesResponse.data)) {
+          console.log(`Received ${coursesResponse.data.length} courses`);
+          setCourses(coursesResponse.data);
+          setFilteredCourses(coursesResponse.data);
+        } else {
+          console.error('Invalid courses data format:', coursesResponse.data);
+          setCourses([]);
+          setFilteredCourses([]);
+        }
+      } catch (courseErr) {
+        console.error('Error fetching courses:', courseErr);
+        setCourses([]);
+        setFilteredCourses([]);
+      }
 
       // Fetch rooms
-      const roomsResponse = await axios.get('http://localhost:8000/api/v1/rooms/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRooms(roomsResponse.data);
+      try {
+        const roomsResponse = await axios.get('http://localhost:8000/api/v1/rooms/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log(`Received ${roomsResponse.data.length} rooms`);
+        setRooms(roomsResponse.data);
+      } catch (roomErr) {
+        console.error('Error fetching rooms:', roomErr);
+        setRooms([]);
+      }
 
-      // Fetch professors (users with role PROFESSOR)
-      const usersResponse = await axios.get('http://localhost:8000/api/v1/users/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const professorsList = usersResponse.data.filter(user => user.role === 'PROFESSOR');
-      setProfessors(professorsList);
+      // Fetch professors
+      try {
+        const professorsResponse = await axios.get('http://localhost:8000/api/v1/professors/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log(`Received ${professorsResponse.data.length} professors`);
+        setProfessors(professorsResponse.data);
+      } catch (profErr) {
+        console.error('Error fetching professors:', profErr);
+        setProfessors([]);
+      }
 
       // Fetch groups
-      const groupsResponse = await axios.get('http://localhost:8000/api/v1/groups/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setGroups(groupsResponse.data);
+      try {
+        const groupsResponse = await axios.get('http://localhost:8000/api/v1/groups/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log(`Received ${groupsResponse.data.length} groups`);
+        setGroups(groupsResponse.data);
+      } catch (groupErr) {
+        console.error('Error fetching groups:', groupErr);
+        setGroups([]);
+      }
+      
+      // Fetch faculties
+      try {
+        const facultiesResponse = await axios.get('http://localhost:8000/api/v1/faculties/', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log(`Received ${facultiesResponse.data.length} faculties`);
+        setFaculties(facultiesResponse.data);
+      } catch (facErr) {
+        console.error('Error fetching faculties:', facErr);
+        setFaculties([]);
+      }
     } catch (err) {
       console.error('Error fetching related data:', err);
     }
@@ -219,6 +271,39 @@ const ExamsList = () => {
       ...formData,
       [name]: value
     });
+  };
+  
+  const handleFacultyChange = (e) => {
+    const facultyId = e.target.value;
+    setSelectedFaculty(facultyId);
+    
+    if (facultyId) {
+      // Filter courses by faculty, but also include courses with no faculty assigned
+      console.log('Filtering courses for faculty:', facultyId);
+      console.log('Total courses before filtering:', courses.length);
+      
+      const filtered = courses.filter(course => 
+        course.faculty_id === facultyId || 
+        !course.faculty_id || 
+        course.faculty_id === null || 
+        course.faculty_id === ''
+      );
+      
+      console.log('Filtered courses count:', filtered.length);
+      setFilteredCourses(filtered);
+      
+      // Reset course selection if the current selection is not in the filtered list
+      const courseExists = filtered.some(course => course.id.toString() === formData.course_id);
+      if (!courseExists) {
+        setFormData({
+          ...formData,
+          course_id: ''
+        });
+      }
+    } else {
+      // If no faculty is selected, show all courses
+      setFilteredCourses(courses);
+    }
   };
 
   const confirmDelete = async () => {
@@ -673,6 +758,23 @@ const ExamsList = () => {
                     required
                   />
                 </div>
+                
+                <div className="form-group">
+                  <label htmlFor="faculty">Faculty</label>
+                  <select
+                    id="faculty"
+                    name="faculty"
+                    value={selectedFaculty}
+                    onChange={handleFacultyChange}
+                  >
+                    <option value="">All Faculties</option>
+                    {faculties.map(faculty => (
+                      <option key={faculty.id} value={faculty.id}>
+                        {faculty.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <div className="form-group">
                   <label htmlFor="course_id">Course</label>
@@ -684,9 +786,15 @@ const ExamsList = () => {
                     required
                   >
                     <option value="">Select a course</option>
-                    {courses.map(course => (
-                      <option key={course.id} value={course.id}>{course.name}</option>
-                    ))}
+                    {filteredCourses && filteredCourses.length > 0 ? (
+                      filteredCourses.map(course => (
+                        <option key={`course-${course.id}`} value={course.id}>
+                          {course.name} - {course.profesor_name || 'No professor'}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>No courses available</option>
+                    )}
                   </select>
                 </div>
 

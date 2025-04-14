@@ -4,6 +4,7 @@ from typing import Optional
 class CourseBase(BaseModel):
     name: str
     profesor_name: str
+    faculty_id: Optional[str] = None
     credits: Optional[int] = None
     year: Optional[int] = None
     semester: Optional[int] = None
@@ -15,6 +16,7 @@ class CourseCreate(CourseBase):
 class CourseUpdate(BaseModel):
     name: Optional[str] = None
     profesor_name: Optional[str] = None
+    faculty_id: Optional[str] = None
     credits: Optional[int] = None
     year: Optional[int] = None
     semester: Optional[int] = None

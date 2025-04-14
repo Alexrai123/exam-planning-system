@@ -9,6 +9,8 @@ import CoursesList from './dashboard/CoursesList';
 import RoomsList from './dashboard/RoomsList';
 import UserProfile from './dashboard/UserProfile';
 import CalendarView from './dashboard/CalendarView';
+import UserDebug from './dashboard/UserDebug';
+import ExternalDataImport from './dashboard/ExternalDataImport';
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
@@ -127,6 +129,8 @@ const Dashboard = () => {
             Use the navigation to access different features based on your role.
           </p>
         </section>
+
+        <UserDebug />
 
         <div className="stats-cards">
           <div className="stat-card">
@@ -267,11 +271,6 @@ const Dashboard = () => {
                 <i className="fas fa-calendar-alt"></i> Exams
               </button>
             </li>
-            <li className={activeTab === 'calendar' ? 'active' : ''}>
-              <button onClick={() => setActiveTab('calendar')}>
-                <i className="fas fa-calendar"></i> Calendar
-              </button>
-            </li>
             <li className={activeTab === 'courses' ? 'active' : ''}>
               <button onClick={() => setActiveTab('courses')}>
                 <i className="fas fa-book"></i> Courses
@@ -280,6 +279,11 @@ const Dashboard = () => {
             <li className={activeTab === 'rooms' ? 'active' : ''}>
               <button onClick={() => setActiveTab('rooms')}>
                 <i className="fas fa-door-open"></i> Rooms
+              </button>
+            </li>
+            <li className={activeTab === 'calendar' ? 'active' : ''}>
+              <button onClick={() => setActiveTab('calendar')}>
+                <i className="fas fa-calendar"></i> Calendar
               </button>
             </li>
             <li className={activeTab === 'profile' ? 'active' : ''}>

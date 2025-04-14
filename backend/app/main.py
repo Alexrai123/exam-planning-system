@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import users, courses, groups, rooms, exams, auth, exports, professors
+from .routes import users, courses, groups, rooms, exams, auth, exports, professors, external_data, faculties
 from .core.config import settings
 
 app = FastAPI(
@@ -27,6 +27,8 @@ app.include_router(rooms.router, prefix=settings.API_V1_STR, tags=["Rooms"])
 app.include_router(exams.router, prefix=settings.API_V1_STR, tags=["Exams"])
 app.include_router(exports.router, prefix=settings.API_V1_STR, tags=["Exports"])
 app.include_router(professors.router, prefix=settings.API_V1_STR, tags=["Professors"])
+app.include_router(faculties.router, prefix=settings.API_V1_STR, tags=["Faculties"])
+app.include_router(external_data.router, prefix=f"{settings.API_V1_STR}/external-data", tags=["External Data"])
 
 @app.get("/", tags=["Root"])
 async def root():
