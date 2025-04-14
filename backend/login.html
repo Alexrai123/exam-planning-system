@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login to Exam Planning System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .token-display {
+            word-break: break-all;
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login to Exam Planning System</h1>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="text" id="email" value="admin@example.com">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="password">
+        </div>
+        <button onclick="login()">Login</button>
+        
+        <div id="result" class="result">
+            <h3>Authentication Result:</h3>
+            <div id="status"></div>
+            <div id="token-container">
+                <h4>Access Token:</h4>
+                <div id="token" class="token-display"></div>
+                <h4>How to use in Swagger UI:</h4>
+                <ol>
+                    <li>Click the "Authorize" button at the top right of Swagger UI</li>
+                    <li>In the value field, enter: <strong>Bearer <span id="token-copy"></span></strong></li>
+                    <li>Click "Authorize" and then "Close"</li>
+                </ol>
+                <button onclick="copyToken()">Copy Token with Bearer Prefix</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            const statusDiv = document.getElementById('status');
+            const tokenDiv = document.getElementById('token');
+            const tokenCopyDiv = document.getElementById('token-copy');
+            
+            resultDiv.style.display = 'block';
+            statusDiv.innerHTML = 'Logging in...';
+            
+            try {
+                // Try different API paths
+                const paths = [
+                    '/api/v1/auth/login',
+                    '/api/auth/login',
+                    '/auth/login'
+                ];
+                
+                let response = null;
+                let successPath = '';
+                
+                for (const path of paths) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('username', email);
+                        formData.append('password', password);
+                        
+                        const resp = await fetch(`http://localhost:8000${path}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (resp.ok) {
+                            response = resp;
+                            successPath = path;
+                            break;
+                        }
+                    } catch (e) {
+                        console.error(`Error with path ${path}:`, e);
+                    }
+                }
+                
+                if (response && response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = `<div style="color: green;">✓ Login successful using endpoint: ${successPath}</div>`;
+                    tokenDiv.textContent = data.access_token;
+                    tokenCopyDiv.textContent = data.access_token;
+                    document.getElementById('token-container').style.display = 'block';
+                } else {
+                    statusDiv.innerHTML = `<div style="color: red;">✗ Login failed. Tried paths: ${paths.join(', ')}</div>`;
+                    document.getElementById('token-container').style.display = 'none';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div style="color: red;">✗ Error: ${error.message}</div>`;
+                document.getElementById('token-container').style.display = 'none';
+            }
+        }
+        
+        function copyToken() {
+            const tokenCopy = document.getElementById('token-copy').textContent;
+            navigator.clipboard.writeText(`Bearer ${tokenCopy}`).then(() => {
+                alert('Token copied to clipboard with Bearer prefix!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

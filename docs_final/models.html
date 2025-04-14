@@ -1,0 +1,554 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Models &mdash; Exam Planning System 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Database Schema" href="database.html" />
+    <link rel="prev" title="API Reference" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Exam Planning System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#user-model">User Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#User"><code class="docutils literal notranslate"><span class="pre">User</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#User.id"><code class="docutils literal notranslate"><span class="pre">User.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#User.name"><code class="docutils literal notranslate"><span class="pre">User.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#User.email"><code class="docutils literal notranslate"><span class="pre">User.email</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#User.password"><code class="docutils literal notranslate"><span class="pre">User.password</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#User.role"><code class="docutils literal notranslate"><span class="pre">User.role</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#User.professor"><code class="docutils literal notranslate"><span class="pre">User.professor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#User.led_groups"><code class="docutils literal notranslate"><span class="pre">User.led_groups</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#UserRole"><code class="docutils literal notranslate"><span class="pre">UserRole</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#UserRole.STUDENT"><code class="docutils literal notranslate"><span class="pre">UserRole.STUDENT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#UserRole.PROFESSOR"><code class="docutils literal notranslate"><span class="pre">UserRole.PROFESSOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#UserRole.SECRETARIAT"><code class="docutils literal notranslate"><span class="pre">UserRole.SECRETARIAT</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#professor-model">Professor Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Professor"><code class="docutils literal notranslate"><span class="pre">Professor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Professor.name"><code class="docutils literal notranslate"><span class="pre">Professor.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Professor.specialization"><code class="docutils literal notranslate"><span class="pre">Professor.specialization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Professor.title"><code class="docutils literal notranslate"><span class="pre">Professor.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Professor.user_id"><code class="docutils literal notranslate"><span class="pre">Professor.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Professor.courses"><code class="docutils literal notranslate"><span class="pre">Professor.courses</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Professor.user"><code class="docutils literal notranslate"><span class="pre">Professor.user</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#grupa-model">Grupa Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Grupa"><code class="docutils literal notranslate"><span class="pre">Grupa</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Grupa.name"><code class="docutils literal notranslate"><span class="pre">Grupa.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Grupa.year"><code class="docutils literal notranslate"><span class="pre">Grupa.year</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Grupa.specialization"><code class="docutils literal notranslate"><span class="pre">Grupa.specialization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Grupa.leader_id"><code class="docutils literal notranslate"><span class="pre">Grupa.leader_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Grupa.exams"><code class="docutils literal notranslate"><span class="pre">Grupa.exams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Grupa.leader"><code class="docutils literal notranslate"><span class="pre">Grupa.leader</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sala-model">Sala Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Sala"><code class="docutils literal notranslate"><span class="pre">Sala</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Sala.name"><code class="docutils literal notranslate"><span class="pre">Sala.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Sala.capacity"><code class="docutils literal notranslate"><span class="pre">Sala.capacity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Sala.building"><code class="docutils literal notranslate"><span class="pre">Sala.building</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Sala.floor"><code class="docutils literal notranslate"><span class="pre">Sala.floor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Sala.exams"><code class="docutils literal notranslate"><span class="pre">Sala.exams</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#course-model">Course Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Course"><code class="docutils literal notranslate"><span class="pre">Course</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Course.id"><code class="docutils literal notranslate"><span class="pre">Course.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Course.name"><code class="docutils literal notranslate"><span class="pre">Course.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Course.profesor_name"><code class="docutils literal notranslate"><span class="pre">Course.profesor_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Course.credits"><code class="docutils literal notranslate"><span class="pre">Course.credits</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Course.professor"><code class="docutils literal notranslate"><span class="pre">Course.professor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Course.exams"><code class="docutils literal notranslate"><span class="pre">Course.exams</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#exam-model">Exam Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Exam"><code class="docutils literal notranslate"><span class="pre">Exam</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.id"><code class="docutils literal notranslate"><span class="pre">Exam.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.course_id"><code class="docutils literal notranslate"><span class="pre">Exam.course_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.grupa_name"><code class="docutils literal notranslate"><span class="pre">Exam.grupa_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.date"><code class="docutils literal notranslate"><span class="pre">Exam.date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.time"><code class="docutils literal notranslate"><span class="pre">Exam.time</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.sala_name"><code class="docutils literal notranslate"><span class="pre">Exam.sala_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.status"><code class="docutils literal notranslate"><span class="pre">Exam.status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.course"><code class="docutils literal notranslate"><span class="pre">Exam.course</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.grupa"><code class="docutils literal notranslate"><span class="pre">Exam.grupa</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Exam.sala"><code class="docutils literal notranslate"><span class="pre">Exam.sala</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#ExamStatus"><code class="docutils literal notranslate"><span class="pre">ExamStatus</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ExamStatus.PROPOSED"><code class="docutils literal notranslate"><span class="pre">ExamStatus.PROPOSED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ExamStatus.CONFIRMED"><code class="docutils literal notranslate"><span class="pre">ExamStatus.CONFIRMED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ExamStatus.CANCELLED"><code class="docutils literal notranslate"><span class="pre">ExamStatus.CANCELLED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ExamStatus.COMPLETED"><code class="docutils literal notranslate"><span class="pre">ExamStatus.COMPLETED</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Exam Planning System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="models">
+<h1>Models<a class="headerlink" href="#models" title="Link to this heading"></a></h1>
+<p>This section documents the data models used in the Exam Planning System.</p>
+<section id="user-model">
+<h2>User Model<a class="headerlink" href="#user-model" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="User">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">User</span></span><a class="headerlink" href="#User" title="Link to this definition"></a></dt>
+<dd><p>Represents a user in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#User.id" title="Link to this definition"></a></dt>
+<dd><p>Primary key for the user.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#User.name" title="Link to this definition"></a></dt>
+<dd><p>The user’s full name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.email">
+<span class="sig-name descname"><span class="pre">email</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#User.email" title="Link to this definition"></a></dt>
+<dd><p>The user’s email address (unique).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.password">
+<span class="sig-name descname"><span class="pre">password</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span></em><a class="headerlink" href="#User.password" title="Link to this definition"></a></dt>
+<dd><p>The user’s hashed password.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.role">
+<span class="sig-name descname"><span class="pre">role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#UserRole" title="UserRole"><span class="pre">UserRole</span></a></em><a class="headerlink" href="#User.role" title="Link to this definition"></a></dt>
+<dd><p>The user’s role in the system (STUDENT, PROFESSOR, or SECRETARIAT).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.professor">
+<span class="sig-name descname"><span class="pre">professor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#User.professor" title="Link to this definition"></a></dt>
+<dd><p>One-to-one relationship with Professor model (if the user is a professor).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="User.led_groups">
+<span class="sig-name descname"><span class="pre">led_groups</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#User.led_groups" title="Link to this definition"></a></dt>
+<dd><p>One-to-many relationship with Grupa model (if the user is a group leader).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="UserRole">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">UserRole</span></span><a class="headerlink" href="#UserRole" title="Link to this definition"></a></dt>
+<dd><p>Enum representing the possible user roles in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="UserRole.STUDENT">
+<span class="sig-name descname"><span class="pre">STUDENT</span></span><a class="headerlink" href="#UserRole.STUDENT" title="Link to this definition"></a></dt>
+<dd><p>Student role.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="UserRole.PROFESSOR">
+<span class="sig-name descname"><span class="pre">PROFESSOR</span></span><a class="headerlink" href="#UserRole.PROFESSOR" title="Link to this definition"></a></dt>
+<dd><p>Professor role.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="UserRole.SECRETARIAT">
+<span class="sig-name descname"><span class="pre">SECRETARIAT</span></span><a class="headerlink" href="#UserRole.SECRETARIAT" title="Link to this definition"></a></dt>
+<dd><p>Administrative staff role.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="professor-model">
+<h2>Professor Model<a class="headerlink" href="#professor-model" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Professor">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Professor</span></span><a class="headerlink" href="#Professor" title="Link to this definition"></a></dt>
+<dd><p>Represents a professor in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Professor.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Professor.name" title="Link to this definition"></a></dt>
+<dd><p>The professor’s name (primary key).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Professor.specialization">
+<span class="sig-name descname"><span class="pre">specialization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Professor.specialization" title="Link to this definition"></a></dt>
+<dd><p>The professor’s area of specialization.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Professor.title">
+<span class="sig-name descname"><span class="pre">title</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">50</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Professor.title" title="Link to this definition"></a></dt>
+<dd><p>The professor’s academic title.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Professor.user_id">
+<span class="sig-name descname"><span class="pre">user_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Professor.user_id" title="Link to this definition"></a></dt>
+<dd><p>Foreign key referencing the User model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Professor.courses">
+<span class="sig-name descname"><span class="pre">courses</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Professor.courses" title="Link to this definition"></a></dt>
+<dd><p>One-to-many relationship with Course model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Professor.user">
+<span class="sig-name descname"><span class="pre">user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Professor.user" title="Link to this definition"></a></dt>
+<dd><p>Many-to-one relationship with User model.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="grupa-model">
+<h2>Grupa Model<a class="headerlink" href="#grupa-model" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Grupa">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Grupa</span></span><a class="headerlink" href="#Grupa" title="Link to this definition"></a></dt>
+<dd><p>Represents a student group in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Grupa.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">50</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Grupa.name" title="Link to this definition"></a></dt>
+<dd><p>The group’s name (primary key, e.g., “CS101”).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Grupa.year">
+<span class="sig-name descname"><span class="pre">year</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Grupa.year" title="Link to this definition"></a></dt>
+<dd><p>The academic year of the group.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Grupa.specialization">
+<span class="sig-name descname"><span class="pre">specialization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Grupa.specialization" title="Link to this definition"></a></dt>
+<dd><p>The group’s field of study.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Grupa.leader_id">
+<span class="sig-name descname"><span class="pre">leader_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Grupa.leader_id" title="Link to this definition"></a></dt>
+<dd><p>Foreign key referencing the User model (the group leader).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Grupa.exams">
+<span class="sig-name descname"><span class="pre">exams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Grupa.exams" title="Link to this definition"></a></dt>
+<dd><p>One-to-many relationship with Exam model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Grupa.leader">
+<span class="sig-name descname"><span class="pre">leader</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Grupa.leader" title="Link to this definition"></a></dt>
+<dd><p>Many-to-one relationship with User model.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="sala-model">
+<h2>Sala Model<a class="headerlink" href="#sala-model" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Sala">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Sala</span></span><a class="headerlink" href="#Sala" title="Link to this definition"></a></dt>
+<dd><p>Represents a room in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Sala.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">50</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Sala.name" title="Link to this definition"></a></dt>
+<dd><p>The room’s name (primary key, e.g., “A101”).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Sala.capacity">
+<span class="sig-name descname"><span class="pre">capacity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Sala.capacity" title="Link to this definition"></a></dt>
+<dd><p>The room’s seating capacity.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Sala.building">
+<span class="sig-name descname"><span class="pre">building</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">50</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Sala.building" title="Link to this definition"></a></dt>
+<dd><p>The building where the room is located.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Sala.floor">
+<span class="sig-name descname"><span class="pre">floor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Sala.floor" title="Link to this definition"></a></dt>
+<dd><p>The floor where the room is located.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Sala.exams">
+<span class="sig-name descname"><span class="pre">exams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Sala.exams" title="Link to this definition"></a></dt>
+<dd><p>One-to-many relationship with Exam model.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="course-model">
+<h2>Course Model<a class="headerlink" href="#course-model" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Course">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Course</span></span><a class="headerlink" href="#Course" title="Link to this definition"></a></dt>
+<dd><p>Represents a course in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Course.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Course.id" title="Link to this definition"></a></dt>
+<dd><p>Primary key for the course.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Course.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Course.name" title="Link to this definition"></a></dt>
+<dd><p>The course name.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Course.profesor_name">
+<span class="sig-name descname"><span class="pre">profesor_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">100</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Course.profesor_name" title="Link to this definition"></a></dt>
+<dd><p>Foreign key referencing the Professor model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Course.credits">
+<span class="sig-name descname"><span class="pre">credits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Course.credits" title="Link to this definition"></a></dt>
+<dd><p>The number of credits for the course.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Course.professor">
+<span class="sig-name descname"><span class="pre">professor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Course.professor" title="Link to this definition"></a></dt>
+<dd><p>Many-to-one relationship with Professor model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Course.exams">
+<span class="sig-name descname"><span class="pre">exams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Course.exams" title="Link to this definition"></a></dt>
+<dd><p>One-to-many relationship with Exam model.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="exam-model">
+<h2>Exam Model<a class="headerlink" href="#exam-model" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="Exam">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Exam</span></span><a class="headerlink" href="#Exam" title="Link to this definition"></a></dt>
+<dd><p>Represents an exam in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.id">
+<span class="sig-name descname"><span class="pre">id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Exam.id" title="Link to this definition"></a></dt>
+<dd><p>Primary key for the exam.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.course_id">
+<span class="sig-name descname"><span class="pre">course_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Integer</span></em><a class="headerlink" href="#Exam.course_id" title="Link to this definition"></a></dt>
+<dd><p>Foreign key referencing the Course model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.grupa_name">
+<span class="sig-name descname"><span class="pre">grupa_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">50</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Exam.grupa_name" title="Link to this definition"></a></dt>
+<dd><p>Foreign key referencing the Grupa model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.date">
+<span class="sig-name descname"><span class="pre">date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Date</span></em><a class="headerlink" href="#Exam.date" title="Link to this definition"></a></dt>
+<dd><p>The date of the exam.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.time">
+<span class="sig-name descname"><span class="pre">time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Time</span></em><a class="headerlink" href="#Exam.time" title="Link to this definition"></a></dt>
+<dd><p>The time of the exam.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.sala_name">
+<span class="sig-name descname"><span class="pre">sala_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">String</span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">50</span></span><span class="p"><span class="pre">)</span></span></em><a class="headerlink" href="#Exam.sala_name" title="Link to this definition"></a></dt>
+<dd><p>Foreign key referencing the Sala model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#ExamStatus" title="ExamStatus"><span class="pre">ExamStatus</span></a></em><a class="headerlink" href="#Exam.status" title="Link to this definition"></a></dt>
+<dd><p>The status of the exam.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.course">
+<span class="sig-name descname"><span class="pre">course</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Exam.course" title="Link to this definition"></a></dt>
+<dd><p>Many-to-one relationship with Course model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.grupa">
+<span class="sig-name descname"><span class="pre">grupa</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Exam.grupa" title="Link to this definition"></a></dt>
+<dd><p>Many-to-one relationship with Grupa model.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="Exam.sala">
+<span class="sig-name descname"><span class="pre">sala</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">relationship</span></em><a class="headerlink" href="#Exam.sala" title="Link to this definition"></a></dt>
+<dd><p>Many-to-one relationship with Sala model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ExamStatus">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ExamStatus</span></span><a class="headerlink" href="#ExamStatus" title="Link to this definition"></a></dt>
+<dd><p>Enum representing the possible exam statuses in the system.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ExamStatus.PROPOSED">
+<span class="sig-name descname"><span class="pre">PROPOSED</span></span><a class="headerlink" href="#ExamStatus.PROPOSED" title="Link to this definition"></a></dt>
+<dd><p>Exam has been proposed by a group leader.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ExamStatus.CONFIRMED">
+<span class="sig-name descname"><span class="pre">CONFIRMED</span></span><a class="headerlink" href="#ExamStatus.CONFIRMED" title="Link to this definition"></a></dt>
+<dd><p>Exam has been confirmed by a professor.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ExamStatus.CANCELLED">
+<span class="sig-name descname"><span class="pre">CANCELLED</span></span><a class="headerlink" href="#ExamStatus.CANCELLED" title="Link to this definition"></a></dt>
+<dd><p>Exam has been cancelled.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ExamStatus.COMPLETED">
+<span class="sig-name descname"><span class="pre">COMPLETED</span></span><a class="headerlink" href="#ExamStatus.COMPLETED" title="Link to this definition"></a></dt>
+<dd><p>Exam has been completed.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="database.html" class="btn btn-neutral float-right" title="Database Schema" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alex.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

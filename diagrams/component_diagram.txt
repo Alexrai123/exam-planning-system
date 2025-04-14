@@ -1,0 +1,73 @@
+@startuml
+skinparam componentStyle uml2
+skinparam component {
+  BackgroundColor #f8f9fa
+  BorderColor #495057
+  FontSize 14
+}
+
+package "Frontend (React)" {
+  [Authentication Components] as auth_comp
+  [Dashboard Components] as dash_comp
+  [Calendar View] as cal_comp
+  [Exam Management] as exam_comp
+  [User Management] as user_comp
+  [Course Management] as course_comp
+  [Room Management] as room_comp
+  [Group Management] as group_comp
+  
+  auth_comp --> dash_comp
+  dash_comp --> cal_comp
+  dash_comp --> exam_comp
+  dash_comp --> user_comp
+  dash_comp --> course_comp
+  dash_comp --> room_comp
+  dash_comp --> group_comp
+}
+
+package "Backend (FastAPI)" {
+  [Authentication API] as auth_api
+  [Exam API] as exam_api
+  [User API] as user_api
+  [Course API] as course_api
+  [Room API] as room_api
+  [Group API] as group_api
+  [Email Service] as email_service
+  
+  auth_api --> [JWT Authentication]
+  exam_api --> email_service
+}
+
+package "Database (PostgreSQL)" {
+  [Users Table] as users_db
+  [Professors Table] as prof_db
+  [Exams Table] as exam_db
+  [Courses Table] as course_db
+  [Rooms Table] as room_db
+  [Groups Table] as group_db
+}
+
+auth_comp --> auth_api : HTTP/JSON
+exam_comp --> exam_api : HTTP/JSON
+user_comp --> user_api : HTTP/JSON
+course_comp --> course_api : HTTP/JSON
+room_comp --> room_api : HTTP/JSON
+group_comp --> group_api : HTTP/JSON
+
+auth_api --> users_db : SQL
+user_api --> users_db : SQL
+user_api --> prof_db : SQL
+
+exam_api --> exam_db : SQL
+exam_api --> course_db : SQL
+exam_api --> room_db : SQL
+exam_api --> group_db : SQL
+
+course_api --> course_db : SQL
+course_api --> prof_db : SQL
+
+room_api --> room_db : SQL
+group_api --> group_db : SQL
+group_api --> users_db : SQL
+
+@enduml

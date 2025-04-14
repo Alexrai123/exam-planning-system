@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Database Schema &mdash; Exam Planning System 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Deployment" href="deployment.html" />
+    <link rel="prev" title="Models" href="models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Exam Planning System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Database Schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#entity-relationship-diagram">Entity Relationship Diagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tables">Tables</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#users">users</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#professors">professors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#grupa">grupa</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sala">sala</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#courses">courses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exams">exams</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#key-design-decisions">Key Design Decisions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Exam Planning System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Database Schema</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/database.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="database-schema">
+<h1>Database Schema<a class="headerlink" href="#database-schema" title="Link to this heading"></a></h1>
+<p>This section documents the database schema used in the Exam Planning System.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The database schema has been designed with a focus on intuitive, meaningful primary keys and relationships. Instead of using abstract numeric IDs for many tables, we use meaningful identifiers like names, which makes the schema more intuitive and easier to understand.</p>
+</section>
+<section id="entity-relationship-diagram">
+<h2>Entity Relationship Diagram<a class="headerlink" href="#entity-relationship-diagram" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌───────────┐       ┌───────────┐       ┌───────────┐
+│   User    │       │ Professor │       │  Course   │
+├───────────┤       ├───────────┤       ├───────────┤
+│ id (PK)   │◄──┐   │ name (PK) │◄─────►│ id (PK)   │
+│ name      │   └──►│ user_id   │       │ name      │
+│ email     │       │ special...│       │ profesor..│
+│ password  │       │ title     │       │ credits   │
+│ role      │       └───────────┘       └─────┬─────┘
+└─────┬─────┘                                 │
+      │                                       │
+      │                                       │
+┌─────▼─────┐                           ┌─────▼─────┐
+│   Grupa   │                           │   Exam    │
+├───────────┤                           ├───────────┤
+│ name (PK) │◄─────────────────────────►│ id (PK)   │
+│ year      │                           │ course_id │
+│ special...│                           │ grupa_name│
+│ leader_id │                           │ date      │
+└───────────┘                           │ time      │
+                                        │ sala_name │
+┌───────────┐                           │ status    │
+│   Sala    │                           └─────┬─────┘
+├───────────┤                                 │
+│ name (PK) │◄─────────────────────────┘
+│ capacity  │
+│ building  │
+│ floor     │
+└───────────┘
+</pre></div>
+</div>
+</section>
+<section id="tables">
+<h2>Tables<a class="headerlink" href="#tables" title="Link to this heading"></a></h2>
+<section id="users">
+<h3>users<a class="headerlink" href="#users" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Constraints</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>Integer</p></td>
+<td><p>User identifier</p></td>
+<td><p>Primary Key</p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>String(100)</p></td>
+<td><p>User’s full name</p></td>
+<td><p>Not Null</p></td>
+</tr>
+<tr class="row-even"><td><p>email</p></td>
+<td><p>String(100)</p></td>
+<td><p>User’s email address</p></td>
+<td><p>Unique, Not Null</p></td>
+</tr>
+<tr class="row-odd"><td><p>password</p></td>
+<td><p>String</p></td>
+<td><p>Hashed password</p></td>
+<td><p>Not Null</p></td>
+</tr>
+<tr class="row-even"><td><p>role</p></td>
+<td><p>Enum</p></td>
+<td><p>User role (STUDENT, PROFESSOR, SECRETARIAT)</p></td>
+<td><p>Not Null</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="professors">
+<h3>professors<a class="headerlink" href="#professors" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Constraints</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>String(100)</p></td>
+<td><p>Professor’s name</p></td>
+<td><p>Primary Key</p></td>
+</tr>
+<tr class="row-odd"><td><p>specialization</p></td>
+<td><p>String(100)</p></td>
+<td><p>Area of specialization</p></td>
+<td><p>Nullable</p></td>
+</tr>
+<tr class="row-even"><td><p>title</p></td>
+<td><p>String(50)</p></td>
+<td><p>Academic title</p></td>
+<td><p>Nullable</p></td>
+</tr>
+<tr class="row-odd"><td><p>user_id</p></td>
+<td><p>Integer</p></td>
+<td><p>Reference to users table</p></td>
+<td><p>Foreign Key, Nullable</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="grupa">
+<h3>grupa<a class="headerlink" href="#grupa" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Constraints</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>String(50)</p></td>
+<td><p>Group name (e.g., “CS101”)</p></td>
+<td><p>Primary Key</p></td>
+</tr>
+<tr class="row-odd"><td><p>year</p></td>
+<td><p>Integer</p></td>
+<td><p>Academic year</p></td>
+<td><p>Nullable</p></td>
+</tr>
+<tr class="row-even"><td><p>specialization</p></td>
+<td><p>String(100)</p></td>
+<td><p>Field of study</p></td>
+<td><p>Nullable</p></td>
+</tr>
+<tr class="row-odd"><td><p>leader_id</p></td>
+<td><p>Integer</p></td>
+<td><p>Reference to users table (group leader)</p></td>
+<td><p>Foreign Key, Nullable</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="sala">
+<h3>sala<a class="headerlink" href="#sala" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Constraints</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>String(50)</p></td>
+<td><p>Room name (e.g., “A101”)</p></td>
+<td><p>Primary Key</p></td>
+</tr>
+<tr class="row-odd"><td><p>capacity</p></td>
+<td><p>Integer</p></td>
+<td><p>Seating capacity</p></td>
+<td><p>Nullable</p></td>
+</tr>
+<tr class="row-even"><td><p>building</p></td>
+<td><p>String(50)</p></td>
+<td><p>Building name</p></td>
+<td><p>Nullable</p></td>
+</tr>
+<tr class="row-odd"><td><p>floor</p></td>
+<td><p>Integer</p></td>
+<td><p>Floor number</p></td>
+<td><p>Nullable</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="courses">
+<h3>courses<a class="headerlink" href="#courses" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Constraints</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>Integer</p></td>
+<td><p>Course identifier</p></td>
+<td><p>Primary Key</p></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>String(100)</p></td>
+<td><p>Course name</p></td>
+<td><p>Not Null</p></td>
+</tr>
+<tr class="row-even"><td><p>profesor_name</p></td>
+<td><p>String(100)</p></td>
+<td><p>Reference to professors table</p></td>
+<td><p>Foreign Key, Not Null</p></td>
+</tr>
+<tr class="row-odd"><td><p>credits</p></td>
+<td><p>Integer</p></td>
+<td><p>Number of credits</p></td>
+<td><p>Nullable</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exams">
+<h3>exams<a class="headerlink" href="#exams" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Constraints</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>id</p></td>
+<td><p>Integer</p></td>
+<td><p>Exam identifier</p></td>
+<td><p>Primary Key</p></td>
+</tr>
+<tr class="row-odd"><td><p>course_id</p></td>
+<td><p>Integer</p></td>
+<td><p>Reference to courses table</p></td>
+<td><p>Foreign Key, Not Null</p></td>
+</tr>
+<tr class="row-even"><td><p>grupa_name</p></td>
+<td><p>String(50)</p></td>
+<td><p>Reference to grupa table</p></td>
+<td><p>Foreign Key, Not Null</p></td>
+</tr>
+<tr class="row-odd"><td><p>date</p></td>
+<td><p>Date</p></td>
+<td><p>Exam date</p></td>
+<td><p>Not Null</p></td>
+</tr>
+<tr class="row-even"><td><p>time</p></td>
+<td><p>Time</p></td>
+<td><p>Exam time</p></td>
+<td><p>Not Null</p></td>
+</tr>
+<tr class="row-odd"><td><p>sala_name</p></td>
+<td><p>String(50)</p></td>
+<td><p>Reference to sala table</p></td>
+<td><p>Foreign Key, Not Null</p></td>
+</tr>
+<tr class="row-even"><td><p>status</p></td>
+<td><p>Enum</p></td>
+<td><p>Exam status (PROPOSED, CONFIRMED, CANCELLED, COMPLETED)</p></td>
+<td><p>Not Null</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="key-design-decisions">
+<h2>Key Design Decisions<a class="headerlink" href="#key-design-decisions" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p><strong>Meaningful Primary Keys</strong>:</p>
+<p>We use meaningful identifiers as primary keys for several tables:</p>
+<ul class="simple">
+<li><p><cite>grupa</cite> table uses <cite>name</cite> (e.g., “CS101”) as the primary key</p></li>
+<li><p><cite>sala</cite> table uses <cite>name</cite> (e.g., “A101”) as the primary key</p></li>
+<li><p><cite>professors</cite> table uses <cite>name</cite> as the primary key</p></li>
+</ul>
+<p>This makes the schema more intuitive and easier to understand, with direct references to meaningful identifiers rather than abstract IDs.</p>
+</li>
+<li><p><strong>Group Leader Functionality</strong>:</p>
+<p>Each group (<cite>grupa</cite>) can have a designated leader who is responsible for communicating with professors about exam scheduling. This is implemented as a <cite>leader_id</cite> field in the <cite>grupa</cite> table that references a user in the <cite>users</cite> table.</p>
+</li>
+<li><p><strong>Intuitive Relationships</strong>:</p>
+<ul class="simple">
+<li><p><cite>exams</cite> table references groups by <cite>grupa_name</cite></p></li>
+<li><p><cite>exams</cite> table references rooms by <cite>sala_name</cite></p></li>
+<li><p><cite>courses</cite> table references professors by <cite>profesor_name</cite></p></li>
+</ul>
+<p>These relationships are more intuitive than using numeric IDs.</p>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="models.html" class="btn btn-neutral float-left" title="Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="deployment.html" class="btn btn-neutral float-right" title="Deployment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alex.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

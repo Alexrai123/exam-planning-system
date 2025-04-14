@@ -1,0 +1,34 @@
+@startuml
+skinparam state {
+  BackgroundColor #f8f9fa
+  BorderColor #495057
+  FontSize 14
+}
+
+[*] --> Proposed : Lider de grupă propune examen
+
+state Proposed {
+  state "În așteptarea confirmării" as waiting
+}
+
+state Confirmed {
+  state "Examen programat" as scheduled
+}
+
+state Cancelled {
+  state "Examen anulat" as cancelled_state
+}
+
+state Completed {
+  state "Examen finalizat" as completed_state
+}
+
+Proposed --> Confirmed : Profesor confirmă
+Proposed --> Cancelled : Profesor/Secretariat anulează
+Confirmed --> Cancelled : Profesor/Secretariat anulează
+Confirmed --> Completed : După data examenului
+
+Cancelled --> [*]
+Completed --> [*]
+
+@enduml

@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deployment &mdash; Exam Planning System 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Database Schema" href="database.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Exam Planning System
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database.html">Database Schema</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deployment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-deployment">Docker Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#database-initialization">Database Initialization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#production-deployment">Production Deployment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Exam Planning System</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Deployment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/deployment.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Link to this heading"></a></h1>
+<p>This section explains how to deploy the Exam Planning System.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Docker and Docker Compose</p></li>
+<li><p>Git</p></li>
+<li><p>Node.js and npm (for frontend development)</p></li>
+<li><p>Python 3.8+ (for local development)</p></li>
+</ul>
+</section>
+<section id="docker-deployment">
+<h2>Docker Deployment<a class="headerlink" href="#docker-deployment" title="Link to this heading"></a></h2>
+<p>The Exam Planning System is designed to run in Docker containers, which simplifies deployment and ensures consistency across environments.</p>
+<ol class="arabic">
+<li><p><strong>Clone the Repository</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>&lt;repository-url&gt;
+<span class="nb">cd</span><span class="w"> </span>proiect-gherman
+</pre></div>
+</div>
+</li>
+<li><p><strong>Start the Docker Containers</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+<p>This will start the following containers:</p>
+<ul class="simple">
+<li><p>PostgreSQL database (<cite>exam_planning_db</cite>) on port 5432</p></li>
+<li><p>FastAPI backend (<cite>exam_planning_backend</cite>) on port 8000</p></li>
+</ul>
+</li>
+<li><p><strong>Start the Frontend Development Server</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>install
+npm<span class="w"> </span>start
+</pre></div>
+</div>
+<p>This will start the React development server on port 3000.</p>
+</li>
+<li><p><strong>Access the Application</strong>:</p>
+<ul class="simple">
+<li><p>Frontend: <a class="reference external" href="http://localhost:3000">http://localhost:3000</a></p></li>
+<li><p>Backend API: <a class="reference external" href="http://localhost:8000">http://localhost:8000</a></p></li>
+<li><p>API Documentation: <a class="reference external" href="http://localhost:8000/docs">http://localhost:8000/docs</a></p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="database-initialization">
+<h2>Database Initialization<a class="headerlink" href="#database-initialization" title="Link to this heading"></a></h2>
+<p>The database is automatically initialized when the containers start. If you need to reset the database or apply migrations, you can use the provided scripts:</p>
+<ol class="arabic">
+<li><p><strong>Reset the Database</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>powershell<span class="w"> </span>-ExecutionPolicy<span class="w"> </span>Bypass<span class="w"> </span>-File<span class="w"> </span>.<span class="se">\r</span>ecreate_database.ps1
+</pre></div>
+</div>
+</li>
+<li><p><strong>Apply Migrations</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>powershell<span class="w"> </span>-ExecutionPolicy<span class="w"> </span>Bypass<span class="w"> </span>-File<span class="w"> </span>.<span class="se">\a</span>pply_migrations.ps1
+</pre></div>
+</div>
+</li>
+<li><p><strong>Populate with Sample Data</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>powershell<span class="w"> </span>-ExecutionPolicy<span class="w"> </span>Bypass<span class="w"> </span>-File<span class="w"> </span>.<span class="se">\r</span>un_populate_database.ps1
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="environment-variables">
+<h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Link to this heading"></a></h2>
+<p>The application uses environment variables for configuration. These are defined in the <cite>docker-compose.yml</cite> file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DATABASE_URL=postgresql://postgres:postgres@postgres:5432/exam_planning</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">SECRET_KEY=your_secret_key_here</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">JWT_SECRET_KEY=your_jwt_secret_key_here</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MAIL_SERVER=smtp.example.com</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MAIL_PORT=587</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MAIL_USERNAME=your_email@example.com</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MAIL_PASSWORD=your_email_password</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">MAIL_USE_TLS=True</span>
+</pre></div>
+</div>
+</section>
+<section id="production-deployment">
+<h2>Production Deployment<a class="headerlink" href="#production-deployment" title="Link to this heading"></a></h2>
+<p>For production deployment, additional steps are recommended:</p>
+<ol class="arabic">
+<li><p><strong>Use a Production-Ready Database</strong>:</p>
+<p>Consider using a managed PostgreSQL service like AWS RDS or Azure Database for PostgreSQL.</p>
+</li>
+<li><p><strong>Set Up HTTPS</strong>:</p>
+<p>Use a reverse proxy like Nginx with Let’s Encrypt for SSL/TLS.</p>
+</li>
+<li><p><strong>Build the Frontend for Production</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>run<span class="w"> </span>build
+</pre></div>
+</div>
+<p>Then serve the static files from a web server or CDN.</p>
+</li>
+<li><p><strong>Set Secure Environment Variables</strong>:</p>
+<p>Use a secure method to manage environment variables in production, such as Docker secrets or a dedicated secrets management service.</p>
+</li>
+<li><p><strong>Set Up Monitoring and Logging</strong>:</p>
+<p>Implement monitoring and logging solutions to track application performance and errors.</p>
+</li>
+</ol>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>Database Connection Issues</strong>:</p>
+<ul class="simple">
+<li><p>Verify that the PostgreSQL container is running: <cite>docker ps</cite></p></li>
+<li><p>Check the database logs: <cite>docker logs exam_planning_db</cite></p></li>
+<li><p>Ensure the DATABASE_URL environment variable is correct</p></li>
+</ul>
+</li>
+<li><p><strong>Backend API Issues</strong>:</p>
+<ul class="simple">
+<li><p>Check the backend logs: <cite>docker logs exam_planning_backend</cite></p></li>
+<li><p>Verify that the backend container is running: <cite>docker ps</cite></p></li>
+<li><p>Try accessing the API documentation: <a class="reference external" href="http://localhost:8000/docs">http://localhost:8000/docs</a></p></li>
+</ul>
+</li>
+<li><p><strong>Frontend Issues</strong>:</p>
+<ul class="simple">
+<li><p>Check the frontend development server logs</p></li>
+<li><p>Verify that the backend API is accessible from the frontend</p></li>
+<li><p>Check for CORS issues in the browser console</p></li>
+</ul>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="database.html" class="btn btn-neutral float-left" title="Database Schema" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Alex.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

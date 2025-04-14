@@ -1,0 +1,62 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Student" as student
+actor "Lider de Grupă" as leader
+actor "Profesor" as professor
+actor "Secretariat" as admin
+
+rectangle "Sistem de Planificare a Examenelor" {
+  usecase "Autentificare" as login
+  usecase "Vizualizare Examene" as viewExams
+  usecase "Vizualizare Calendar" as viewCalendar
+  usecase "Vizualizare Profil" as viewProfile
+  
+  usecase "Propunere Examene" as proposeExam
+  usecase "Confirmare Examene" as confirmExam
+  usecase "Anulare Examene" as cancelExam
+  
+  usecase "Creare Examene" as createExam
+  usecase "Editare Examene" as editExam
+  usecase "Ștergere Examene" as deleteExam
+  
+  usecase "Gestionare Utilizatori" as manageUsers
+  usecase "Gestionare Săli" as manageRooms
+  usecase "Gestionare Cursuri" as manageCourses
+  usecase "Gestionare Grupe" as manageGroups
+  usecase "Programare Automată Examene" as autoSchedule
+}
+
+student --> login
+student --> viewExams
+student --> viewCalendar
+student --> viewProfile
+
+leader --> login
+leader --> viewExams
+leader --> viewCalendar
+leader --> viewProfile
+leader --> proposeExam
+
+professor --> login
+professor --> viewExams
+professor --> viewCalendar
+professor --> viewProfile
+professor --> confirmExam
+professor --> cancelExam
+
+admin --> login
+admin --> viewExams
+admin --> viewCalendar
+admin --> viewProfile
+admin --> createExam
+admin --> editExam
+admin --> deleteExam
+admin --> manageUsers
+admin --> manageRooms
+admin --> manageCourses
+admin --> manageGroups
+admin --> autoSchedule
+
+@enduml

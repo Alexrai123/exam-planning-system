@@ -1,0 +1,449 @@
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.orm import Session
+from typing import List, Any, Optional
+from datetime import date, time
+import sqlalchemy as sa
+
+from ..db.base import get_db
+from ..models.exam import Exam, ExamStatus
+from ..models.course import Course
+from ..models.sala import Sala
+from ..models.grupa import Grupa
+from ..schemas.exam import ExamResponse, ExamCreate, ExamUpdate, ExamStatusUpdate
+from ..routes.auth import get_current_user, is_secretariat, is_professor
+from ..services.email import send_exam_notification
+
+router = APIRouter(prefix="/exams", tags=["Exams"])
+
+@router.get("/", response_model=List[ExamResponse])
+def get_exams(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_user),
+    course_id: Optional[int] = None,
+    grupa_name: Optional[str] = None,
+    sala_id: Optional[int] = None,
+    status: Optional[ExamStatus] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    Retrieve exams with optional filtering. All authenticated users can access this endpoint.
+    """
+    query = db.query(Exam)
+    
+    if course_id:
+        query = query.filter(Exam.course_id == course_id)
+    if grupa_name:
+        query = query.filter(Exam.grupa_name == grupa_name)
+    if sala_id:
+        query = query.filter(Exam.sala_id == sala_id)
+    if status:
+        query = query.filter(Exam.status == status)
+    if start_date:
+        query = query.filter(Exam.date >= start_date)
+    if end_date:
+        query = query.filter(Exam.date <= end_date)
+    
+    exams = query.offset(skip).limit(limit).all()
+    return exams
+
+@router.post("/", response_model=ExamResponse)
+def create_exam(
+    exam_in: ExamCreate,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(is_secretariat)
+) -> Any:
+    """
+    Create a new exam. Only secretariat can access this endpoint.
+    """
+    # Check if course exists
+    course = db.query(Course).filter(Course.id == exam_in.course_id).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    # Check if group exists
+    grupa = db.query(Grupa).filter(Grupa.name == exam_in.grupa_name).first()
+    if not grupa:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    # Check if room exists
+    sala = db.query(Sala).filter(Sala.name == exam_in.sala_name).first()
+    if not sala:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Room not found"
+        )
+    
+    # Check if room is available at the specified date and time
+    room_availability = db.query(Exam).filter(
+        Exam.sala_name == exam_in.sala_name,
+        Exam.date == exam_in.date,
+        Exam.time == exam_in.time
+    ).first()
+    
+    if room_availability:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Room is already booked at the specified date and time"
+        )
+    
+    # Check if group has another exam at the same date and time
+    group_availability = db.query(Exam).filter(
+        Exam.grupa_name == exam_in.grupa_name,
+        Exam.date == exam_in.date,
+        Exam.time == exam_in.time
+    ).first()
+    
+    if group_availability:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group already has an exam at the specified date and time"
+        )
+    
+    # Create exam
+    exam = Exam(**exam_in.dict())
+    db.add(exam)
+    db.commit()
+    db.refresh(exam)
+    
+    # Send notification email to professor
+    try:
+        send_exam_notification(exam, db)
+    except Exception as e:
+        # Log the error but don't fail the request
+        print(f"Error sending email notification: {str(e)}")
+    
+    return exam
+
+@router.get("/{exam_id}", response_model=ExamResponse)
+def get_exam(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_user)
+) -> Any:
+    """
+    Get a specific exam by id. All authenticated users can access this endpoint.
+    """
+    exam = db.query(Exam).filter(Exam.id == exam_id).first()
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Exam not found"
+        )
+    return exam
+
+@router.put("/{exam_id}", response_model=ExamResponse)
+def update_exam(
+    exam_id: int,
+    exam_in: ExamUpdate,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_user)
+) -> Any:
+    """
+    Update an exam. Secretariat can update all fields, professors can only update status.
+    """
+    exam = db.query(Exam).filter(Exam.id == exam_id).first()
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Exam not found"
+        )
+    
+    # Check permissions
+    is_admin = current_user.role == "secretariat"
+    is_prof = current_user.role == "professor"
+    
+    # If user is professor, they can only update status
+    if is_prof and not is_admin:
+        # Get the course for this exam
+        course = db.query(Course).filter(Course.id == exam.course_id).first()
+        
+        # Check if the professor is assigned to this course
+        if course.profesor_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only update exams for your courses"
+            )
+        
+        # Professor can only update status
+        if exam_in.status:
+            exam.status = exam_in.status
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Professors can only update exam status"
+            )
+    else:
+        # Secretariat can update all fields
+        update_data = exam_in.dict(exclude_unset=True)
+        
+        # If updating room, date or time, check availability
+        if "sala_name" in update_data or "date" in update_data or "time" in update_data:
+            sala_name = update_data.get("sala_name", exam.sala_name)
+            date_val = update_data.get("date", exam.date)
+            time_val = update_data.get("time", exam.time)
+            
+            # Check if room is available
+            room_availability = db.query(Exam).filter(
+                Exam.sala_name == sala_name,
+                Exam.date == date_val,
+                Exam.time == time_val,
+                Exam.id != exam_id
+            ).first()
+            
+            if room_availability:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Room is already booked at the specified date and time"
+                )
+            
+            # Check if group has another exam
+            grupa_id = update_data.get("grupa_name", exam.grupa_name)
+            group_availability = db.query(Exam).filter(
+                Exam.grupa_name == grupa_id,
+                Exam.date == date_val,
+                Exam.time == time_val,
+                Exam.id != exam_id
+            ).first()
+            
+            if group_availability:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Group already has an exam at the specified date and time"
+                )
+        
+        # Update exam
+        for field, value in update_data.items():
+            setattr(exam, field, value)
+    
+    db.add(exam)
+    db.commit()
+    db.refresh(exam)
+    
+    # Send notification if status changed to confirmed
+    if exam_in.status == ExamStatus.CONFIRMED:
+        try:
+            send_exam_notification(exam, db, is_confirmation=True)
+        except Exception as e:
+            # Log the error but don't fail the request
+            print(f"Error sending email notification: {str(e)}")
+    
+    return exam
+
+@router.patch("/{exam_id}/status", response_model=ExamResponse)
+def update_exam_status(
+    exam_id: int,
+    status_update: ExamStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_user)
+) -> Any:
+    """
+    Update only the status of an exam. Secretariat can update to any status,
+    professors can only update status for their own courses.
+    """
+    exam = db.query(Exam).filter(Exam.id == exam_id).first()
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Exam not found"
+        )
+    
+    # Check permissions
+    is_admin = current_user.role == "secretariat"
+    is_prof = current_user.role == "professor"
+    
+    # If user is professor, check if they are assigned to this course
+    if is_prof and not is_admin:
+        # Get the course for this exam
+        course = db.query(Course).filter(Course.id == exam.course_id).first()
+        
+        # Check if the professor is assigned to this course
+        if course.profesor_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only update exams for your courses"
+            )
+    
+    # Update the status
+    exam.status = status_update.status
+    db.commit()
+    db.refresh(exam)
+    
+    # Send notification about status change
+    try:
+        send_exam_notification(
+            exam=exam,
+            action="status_update",
+            db=db
+        )
+    except Exception as e:
+        # Log the error but don't fail the request
+        print(f"Failed to send notification: {str(e)}")
+    
+    return exam
+
+@router.delete("/{exam_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_exam(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(is_secretariat)
+) -> None:
+    """
+    Delete an exam. Only secretariat can access this endpoint.
+    """
+    exam = db.query(Exam).filter(Exam.id == exam_id).first()
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Exam not found"
+        )
+    
+    db.delete(exam)
+    db.commit()
+    return None
+
+@router.post("/auto-schedule", response_model=List[ExamResponse])
+def auto_schedule_exams(
+    course_ids: List[int] = Query(...),
+    grupa_names: List[str] = Query(...),
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(is_secretariat)
+) -> Any:
+    """
+    Automatically schedule exams for the given courses and groups.
+    Only secretariat can access this endpoint.
+    """
+    from datetime import timedelta
+    import random
+    
+    # Get all available rooms
+    rooms = db.query(Sala).all()
+    if not rooms:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No rooms available for scheduling"
+        )
+    
+    # Get all courses
+    courses = db.query(Course).filter(Course.id.in_(course_ids)).all()
+    if len(courses) != len(course_ids):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One or more courses not found"
+        )
+    
+    # Get all groups
+    groups = db.query(Grupa).filter(Grupa.name.in_(grupa_names)).all()
+    if len(groups) != len(grupa_names):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One or more groups not found"
+        )
+    
+    # Define possible exam times
+    exam_times = [
+        time(9, 0),  # 9:00 AM
+        time(12, 0), # 12:00 PM
+        time(15, 0)  # 3:00 PM
+    ]
+    
+    # Create a list of all possible dates between start_date and end_date
+    current_date = start_date
+    available_dates = []
+    while current_date <= end_date:
+        # Skip weekends
+        if current_date.weekday() < 5:  # Monday to Friday
+            available_dates.append(current_date)
+        current_date += timedelta(days=1)
+    
+    if not available_dates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No available dates in the specified range"
+        )
+    
+    # Create exams
+    created_exams = []
+    
+    for course in courses:
+        for group in groups:
+            # Try to find an available slot
+            scheduled = False
+            
+            # Shuffle dates and times to get random distribution
+            random.shuffle(available_dates)
+            
+            for exam_date in available_dates:
+                random.shuffle(exam_times)
+                
+                for exam_time in exam_times:
+                    random.shuffle(rooms)
+                    
+                    for room in rooms:
+                        # Check if room is available at this date and time
+                        room_availability = db.query(Exam).filter(
+                            Exam.sala_name == room.name,
+                            Exam.date == exam_date,
+                            Exam.time == exam_time
+                        ).first()
+                        
+                        if not room_availability:
+                            # Check if group already has an exam at this date and time
+                            group_availability = db.query(Exam).filter(
+                                Exam.grupa_name == group.name,
+                                Exam.date == exam_date,
+                                Exam.time == exam_time
+                            ).first()
+                            
+                            if not group_availability:
+                                # Create exam
+                                exam = Exam(
+                                    course_id=course.id,
+                                    grupa_name=group.name,
+                                    date=exam_date,
+                                    time=exam_time,
+                                    sala_name=room.name,
+                                    status=ExamStatus.PROPOSED
+                                )
+                                db.add(exam)
+                                db.commit()
+                                db.refresh(exam)
+                                created_exams.append(exam)
+                                
+                                # Send notification email to professor
+                                try:
+                                    send_exam_notification(exam, db)
+                                except Exception as e:
+                                    # Log the error but don't fail the request
+                                    print(f"Error sending email notification: {str(e)}")
+                                
+                                scheduled = True
+                                break
+                        
+                        if scheduled:
+                            break
+                    
+                    if scheduled:
+                        break
+                
+                if scheduled:
+                    break
+            
+            if not scheduled:
+                # Could not schedule this exam
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Could not find available slot for course {course.name} and group {group.name}"
+                )
+    
+    return created_exams

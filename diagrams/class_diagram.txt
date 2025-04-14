@@ -1,0 +1,80 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontSize 14
+skinparam classBackgroundColor #f8f9fa
+skinparam classBorderColor #495057
+
+class User {
+  +id: Integer
+  +name: String
+  +email: String
+  +password: String
+  +role: UserRole
+}
+
+enum UserRole {
+  STUDENT
+  PROFESSOR
+  SECRETARIAT
+}
+
+class Professor {
+  +name: String
+  +specialization: String
+  +title: String
+  +user_id: Integer
+}
+
+class Grupa {
+  +name: String
+  +year: Integer
+  +specialization: String
+  +leader_id: Integer
+}
+
+class Sala {
+  +name: String
+  +capacity: Integer
+  +building: String
+  +floor: Integer
+}
+
+class Course {
+  +id: Integer
+  +name: String
+  +profesor_name: String
+  +credits: Integer
+}
+
+class Exam {
+  +id: Integer
+  +course_id: Integer
+  +grupa_name: String
+  +date: Date
+  +time: Time
+  +sala_name: String
+  +status: ExamStatus
+}
+
+enum ExamStatus {
+  PROPOSED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+User "1" -- "0..1" Professor : has profile >
+User "1" -- "0..n" Grupa : leads >
+
+Professor "1" -- "0..n" Course : teaches >
+
+Grupa "1" -- "0..n" Exam : takes >
+
+Sala "1" -- "0..n" Exam : hosts >
+
+Course "1" -- "0..n" Exam : has >
+
+User -- UserRole : has >
+Exam -- ExamStatus : has >
+
+@enduml
