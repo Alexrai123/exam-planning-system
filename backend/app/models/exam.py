@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Time, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Time, Enum, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from ..db.base import Base
 import enum
+from datetime import datetime
 
 class ExamStatus(str, enum.Enum):
     PROPOSED = "proposed"
@@ -19,6 +20,7 @@ class Exam(Base):
     time = Column(Time, nullable=False)
     sala_name = Column(String(50), ForeignKey("sala.name"), nullable=False)
     status = Column(Enum(ExamStatus), default=ExamStatus.PROPOSED, nullable=False)
+    professor_agreement = Column(Boolean, default=False, nullable=False)
     
     # Relationships
     course = relationship("Course", back_populates="exams")

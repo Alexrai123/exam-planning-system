@@ -74,9 +74,34 @@ const Dashboard = () => {
             headers: { Authorization: `Bearer ${token}` }
           });
           
+          // If user is a professor, filter exams to only show those related to their courses
+          let filteredExamsCount = examsResponse.data.length || 0;
+          
+          if (userData && userData.role === 'PROFESSOR') {
+            console.log('Filtering dashboard stats for professor:', userData.name);
+            
+            // Filter courses to only include those taught by this professor
+            const professorCourses = coursesResponse.data.filter(course => 
+              course.profesor_name === userData.name
+            );
+            
+            // Get the course IDs taught by this professor
+            const professorCourseIds = professorCourses.map(course => course.id);
+            
+            // Filter exams to only include those for the professor's courses
+            const filteredExams = examsResponse.data.filter(exam => 
+              professorCourseIds.includes(exam.course_id)
+            );
+            
+            filteredExamsCount = filteredExams.length;
+            console.log('Filtered exams count for professor:', filteredExamsCount);
+          }
+          
           setStats({
-            examsCount: examsResponse.data.length || 0,
-            coursesCount: coursesResponse.data.length || 0,
+            examsCount: filteredExamsCount,
+            coursesCount: userData && userData.role === 'PROFESSOR' ? 
+              coursesResponse.data.filter(course => course.profesor_name === userData.name).length : 
+              coursesResponse.data.length || 0,
             roomsCount: roomsResponse.data.length || 0
           });
         } catch (statsErr) {
@@ -274,21 +299,26 @@ const Dashboard = () => {
                 <i className="fas fa-calendar-alt"></i> Exams
               </button>
             </li>
-            <li className={activeTab === 'courses' ? 'active' : ''}>
-              <button onClick={() => setActiveTab('courses')}>
-                <i className="fas fa-book"></i> Courses
-              </button>
-            </li>
-            <li className={activeTab === 'rooms' ? 'active' : ''}>
-              <button onClick={() => setActiveTab('rooms')}>
-                <i className="fas fa-door-open"></i> Rooms
-              </button>
-            </li>
-            <li className={activeTab === 'groups' ? 'active' : ''}>
-              <button onClick={() => setActiveTab('groups')}>
-                <i className="fas fa-users"></i> Groups
-              </button>
-            </li>
+            {/* Only show Courses, Rooms, and Groups tabs for SECRETARIAT users */}
+            {(user.role === 'SECRETARIAT') && (
+              <>
+                <li className={activeTab === 'courses' ? 'active' : ''}>
+                  <button onClick={() => setActiveTab('courses')}>
+                    <i className="fas fa-book"></i> Courses
+                  </button>
+                </li>
+                <li className={activeTab === 'rooms' ? 'active' : ''}>
+                  <button onClick={() => setActiveTab('rooms')}>
+                    <i className="fas fa-door-open"></i> Rooms
+                  </button>
+                </li>
+                <li className={activeTab === 'groups' ? 'active' : ''}>
+                  <button onClick={() => setActiveTab('groups')}>
+                    <i className="fas fa-users"></i> Groups
+                  </button>
+                </li>
+              </>
+            )}
             <li className={activeTab === 'calendar' ? 'active' : ''}>
               <button onClick={() => setActiveTab('calendar')}>
                 <i className="fas fa-calendar"></i> Calendar

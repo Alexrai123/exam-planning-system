@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import './DashboardComponents.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEdit, faTrash, faSave } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEdit, faTrash, faSave, faPlus, faFileExcel, faDownload, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 
 const ExamsList = () => {
   const { currentUser } = useAuth();
@@ -51,8 +51,17 @@ const ExamsList = () => {
         }
       });
       
+      // Debug: Log the exam data
+      console.log('Exams data from API:', response.data);
+      
       // Process the exam data to ensure all properties are valid
       const processedExams = response.data.map(exam => {
+        // Debug: Log each exam's professor_agreement value
+        console.log(`Exam ID ${exam.id}: professor_agreement = ${exam.professor_agreement}, status = ${exam.status}`);
+        
+        // For confirmed exams, ensure professor_agreement is true
+        const isProfessorAgreement = exam.status === 'CONFIRMED' || exam.professor_agreement;
+        
         return {
           id: exam.id,
           date: exam.date || '',
@@ -61,6 +70,7 @@ const ExamsList = () => {
           sala_name: exam.sala_name || '',
           grupa_name: exam.grupa_name || '',
           status: exam.status || 'proposed',
+          professor_agreement: isProfessorAgreement, // Ensure professor_agreement is included
           // Create virtual objects for display purposes
           course: { name: `Course ${exam.course_id}` },
           sala: { name: exam.sala_name || 'N/A' },
@@ -69,7 +79,39 @@ const ExamsList = () => {
       });
       
       console.log('Processed exams:', processedExams);
-      setExams(processedExams);
+      
+      // If user is a professor, filter exams to only show those related to their courses
+      if (currentUser && currentUser.role === 'PROFESSOR') {
+        console.log('Filtering exams for professor:', currentUser.name);
+        
+        // First, fetch the professor's courses
+        const coursesResponse = await axios.get('http://localhost:8000/api/v1/courses/', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        // Filter courses to only include those taught by this professor
+        const professorCourses = coursesResponse.data.filter(course => 
+          course.profesor_name === currentUser.name
+        );
+        
+        console.log('Professor courses:', professorCourses);
+        
+        // Get the course IDs taught by this professor
+        const professorCourseIds = professorCourses.map(course => course.id);
+        
+        // Filter exams to only include those for the professor's courses
+        const filteredExams = processedExams.filter(exam => 
+          professorCourseIds.includes(exam.course_id)
+        );
+        
+        console.log('Filtered exams for professor:', filteredExams);
+        setExams(filteredExams);
+      } else {
+        // For non-professors (secretariat, students), show all exams
+        setExams(processedExams);
+      }
       setLoading(false);
     } catch (err) {
       console.error('Error fetching exams:', err);
@@ -232,14 +274,219 @@ const ExamsList = () => {
   };
 
   const handleStatusChange = (exam) => {
-    console.log('Opening status modal for exam:', exam);
+    if (currentUser.role !== 'SECRETARIAT') {
+      return; // Only secretariat can change status
+    }
+    
     setSelectedExam(exam);
     setFormData({
       ...formData,
-      status: exam.status || 'proposed'
+      status: exam.status || 'PROPOSED'
     });
-    console.log('Form data after setting:', formData);
     setShowStatusModal(true);
+  };
+
+  // Removed publication functionality
+  // const handlePublishExam = async (examId) => {
+  //   if (currentUser.role !== 'SECRETARIAT') {
+  //     return; // Only secretariat can publish exams
+  //   }
+
+  //   try {
+  //     const token = localStorage.getItem('token');
+  //     if (!token) {
+  //       setError('No authentication token found');
+  //       return;
+  //     }
+
+  //     // Set the publication date to current date and time
+  //     const updateData = {
+  //       publication_date: new Date().toISOString()
+  //     };
+
+  //     await axios.put(`http://localhost:8000/api/v1/exams/${examId}`, updateData, {
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`,
+  //         'Content-Type': 'application/json'
+  //       }
+  //     });
+
+  //     setSuccess('Exam published successfully');
+  //     fetchExams(); // Refresh the exams list
+
+  //     // Clear success message after 3 seconds
+  //     setTimeout(() => {
+  //       setSuccess(null);
+  //     }, 3000);
+  //   } catch (err) {
+  //     console.error('Error publishing exam:', err);
+  //     setError(err.response?.data?.detail || 'Failed to publish exam. Please try again.');
+  //   }
+  // };
+
+  const handleProfessorAgreement = async (examId, agreementStatus) => {
+    if (currentUser.role !== 'PROFESSOR') {
+      return; // Only professors can set agreement
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No authentication token found');
+        return;
+      }
+
+      // Update the professor agreement status
+      const updateData = {
+        professor_agreement: agreementStatus
+      };
+
+      await axios.put(`http://localhost:8000/api/v1/exams/${examId}`, updateData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setSuccess(`Professor agreement ${agreementStatus ? 'confirmed' : 'withdrawn'}`);
+      fetchExams(); // Refresh the exams list
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error updating professor agreement:', err);
+      setError(err.response?.data?.detail || 'Failed to update agreement status. Please try again.');
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No authentication token found');
+        return;
+      }
+
+      // Set loading state
+      setLoading(true);
+      
+      // Make API request to get Excel file
+      const response = await axios.get('http://localhost:8000/api/v1/exams/export/excel', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        responseType: 'blob' // Important: This tells axios to process the response as a binary blob
+      });
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Set the file name from the Content-Disposition header if available
+      // or use a default name
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'exam_schedule.xlsx';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/i);
+        if (filenameMatch.length === 2) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      
+      // Append the link to the body
+      document.body.appendChild(link);
+      
+      // Trigger the download
+      link.click();
+      
+      // Clean up: remove the link
+      document.body.removeChild(link);
+      
+      // Show success message
+      setSuccess('Excel file downloaded successfully');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error exporting Excel file:', err);
+      setError('Failed to export Excel file. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No authentication token found');
+        return;
+      }
+
+      // Set loading state
+      setLoading(true);
+      
+      // Make API request to get PDF file
+      const response = await axios.get('http://localhost:8000/api/v1/exams/export/pdf', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        responseType: 'blob' // Important: This tells axios to process the response as a binary blob
+      });
+      
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Set the file name from the Content-Disposition header if available
+      // or use a default name
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = 'exam_schedule.pdf';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/i);
+        if (filenameMatch && filenameMatch.length === 2) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.setAttribute('download', filename);
+      
+      // Append the link to the body
+      document.body.appendChild(link);
+      
+      // Trigger the download
+      link.click();
+      
+      // Clean up: remove the link
+      document.body.removeChild(link);
+      
+      // Show success message
+      setSuccess('PDF file downloaded successfully');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    } catch (err) {
+      console.error('Error exporting PDF file:', err);
+      setError('Failed to export PDF file. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateExam = () => {
@@ -542,14 +789,48 @@ const ExamsList = () => {
         {/* Error message */}
         {error && <div className="error-message">{error}</div>}
         
-        {/* Create button for admins and professors */}
-        {canEdit && (
+        {/* Action buttons for secretariat */}
+        {isAdmin && (
           <div className="action-bar">
             <button 
               className="action-button create-button"
               onClick={handleCreateExam}
             >
-              <FontAwesomeIcon icon={faEye} /> Create New Exam
+              <FontAwesomeIcon icon={faPlus} /> Create New Exam
+            </button>
+            <button 
+              className="action-button export-button"
+              onClick={handleExportExcel}
+              disabled={loading}
+            >
+              <FontAwesomeIcon icon={faFileExcel} /> Export to Excel
+            </button>
+            <button 
+              className="action-button pdf-button"
+              onClick={handleExportPdf}
+              disabled={loading}
+            >
+              <FontAwesomeIcon icon={faFilePdf} /> Export to PDF
+            </button>
+          </div>
+        )}
+        
+        {/* Export button for professors */}
+        {isProfessor && (
+          <div className="action-bar">
+            <button 
+              className="action-button export-button"
+              onClick={handleExportExcel}
+              disabled={loading}
+            >
+              <FontAwesomeIcon icon={faFileExcel} /> Download Excel
+            </button>
+            <button 
+              className="action-button pdf-button"
+              onClick={handleExportPdf}
+              disabled={loading}
+            >
+              <FontAwesomeIcon icon={faFilePdf} /> Download PDF
             </button>
           </div>
         )}
@@ -568,6 +849,7 @@ const ExamsList = () => {
                 <th>Course</th>
                 <th>Room</th>
                 <th>Status</th>
+                <th>Professor Agreement</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -589,6 +871,18 @@ const ExamsList = () => {
                         ? exam.status.charAt(0).toUpperCase() + exam.status.slice(1).toLowerCase() 
                         : 'Proposed'}
                     </span>
+                  </td>
+                  {/* Publication date column removed */}
+                  <td>
+                    {isProfessor 
+                      ? <input 
+                          type="checkbox" 
+                          checked={exam.status.includes('CONFIRMED') || exam.professor_agreement} 
+                          onChange={() => handleProfessorAgreement(exam.id, !exam.professor_agreement)}
+                          disabled={currentUser.role !== 'PROFESSOR' || exam.status.includes('CONFIRMED')}
+                        />
+                      : (exam.status.includes('CONFIRMED') || exam.professor_agreement) ? 'Yes' : 'No'
+                    }
                   </td>
                   <td className="actions-cell">
                     <button 

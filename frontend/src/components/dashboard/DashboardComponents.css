@@ -22,6 +22,7 @@
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
 }
 
 .create-button {
@@ -39,6 +40,50 @@
 
 .create-button:hover {
   background-color: #219653;
+}
+
+.export-button {
+  background-color: #3498db;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-button:hover {
+  background-color: #2980b9;
+}
+
+.export-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.pdf-button {
+  background-color: #e74c3c;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-button:hover {
+  background-color: #c0392b;
+}
+
+.pdf-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
 }
 
 /* Table Styles */

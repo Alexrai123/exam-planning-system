@@ -73,12 +73,13 @@ const CoursesList = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // Fetch professors (users with role PROFESSOR)
-      const usersResponse = await axios.get('http://localhost:8000/api/v1/users/', {
+      // Fetch professors from the professors API endpoint
+      const response = await axios.get('http://localhost:8000/api/v1/professors/', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const professorsList = usersResponse.data.filter(user => user.role === 'PROFESSOR');
-      setProfessors(professorsList);
+      
+      console.log('Professors data:', response.data);
+      setProfessors(response.data);
     } catch (err) {
       console.error('Error fetching professors:', err);
     }

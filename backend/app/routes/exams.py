@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.orm import Session
 from typing import List, Any, Optional
 from datetime import date, time
@@ -13,6 +13,8 @@ from ..models.user import User, UserRole
 from ..schemas.exam import ExamResponse, ExamCreate, ExamUpdate, ExamStatusUpdate
 from ..routes.auth import get_current_user, is_secretariat, is_professor, is_group_leader
 from ..services.email import send_exam_notification
+from ..services.excel import generate_exams_excel
+from ..services.pdf import generate_exams_pdf
 
 router = APIRouter(prefix="/exams", tags=["Exams"])
 
@@ -304,6 +306,12 @@ def update_exam_status(
     
     # Update the status
     exam.status = status_update.status
+    
+    # If status is being set to CONFIRMED, ensure professor_agreement is True
+    if status_update.status == ExamStatus.CONFIRMED:
+        exam.professor_agreement = True
+
+    db.add(exam)
     db.commit()
     db.refresh(exam)
     
@@ -338,7 +346,117 @@ def delete_exam(
     
     db.delete(exam)
     db.commit()
-    return None
+    return {"message": "Exam deleted successfully"}
+
+@router.get("/export/excel", response_class=Response)
+def export_exams_excel(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_user),
+    course_id: Optional[int] = None,
+    grupa_name: Optional[str] = None,
+    sala_id: Optional[int] = None,
+    status: Optional[ExamStatus] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
+) -> Any:
+    """
+    Export exams to Excel format. All authenticated users can access this endpoint,
+    but it's primarily intended for secretariat users.
+    """
+    # Build query with filters (similar to get_exams endpoint)
+    query = db.query(Exam)
+    
+    if course_id:
+        query = query.filter(Exam.course_id == course_id)
+    if grupa_name:
+        query = query.filter(Exam.grupa_name == grupa_name)
+    if sala_id:
+        query = query.filter(Exam.sala_id == sala_id)
+    if status:
+        query = query.filter(Exam.status == status)
+    if start_date:
+        query = query.filter(Exam.date >= start_date)
+    if end_date:
+        query = query.filter(Exam.date <= end_date)
+    
+    # If user is a professor, only show exams for their courses
+    if current_user.role.upper() == UserRole.PROFESSOR:
+        # Get courses taught by this professor
+        professor_courses = db.query(Course).filter(
+            Course.profesor_id == current_user.id
+        ).all()
+        professor_course_ids = [course.id for course in professor_courses]
+        
+        # Filter exams to only include those for the professor's courses
+        query = query.filter(Exam.course_id.in_(professor_course_ids))
+    
+    exams = query.all()
+    
+    # Generate Excel file
+    excel_data = generate_exams_excel(exams, db)
+    
+    # Set response headers for file download
+    headers = {
+        'Content-Disposition': 'attachment; filename="exam_schedule.xlsx"',
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+    
+    return Response(content=excel_data, headers=headers)
+
+@router.get("/export/pdf", response_class=Response)
+def export_exams_pdf(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_user),
+    course_id: Optional[int] = None,
+    grupa_name: Optional[str] = None,
+    sala_id: Optional[int] = None,
+    status: Optional[ExamStatus] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
+) -> Any:
+    """
+    Export exams to PDF format. All authenticated users can access this endpoint,
+    but it's primarily intended for secretariat users.
+    """
+    # Build query with filters (similar to get_exams endpoint)
+    query = db.query(Exam)
+    
+    if course_id:
+        query = query.filter(Exam.course_id == course_id)
+    if grupa_name:
+        query = query.filter(Exam.grupa_name == grupa_name)
+    if sala_id:
+        query = query.filter(Exam.sala_id == sala_id)
+    if status:
+        query = query.filter(Exam.status == status)
+    if start_date:
+        query = query.filter(Exam.date >= start_date)
+    if end_date:
+        query = query.filter(Exam.date <= end_date)
+    
+    # If user is a professor, only show exams for their courses
+    if current_user.role.upper() == UserRole.PROFESSOR:
+        # Get courses taught by this professor
+        professor_courses = db.query(Course).filter(
+            Course.profesor_id == current_user.id
+        ).all()
+        professor_course_ids = [course.id for course in professor_courses]
+        
+        # Filter exams to only include those for the professor's courses
+        query = query.filter(Exam.course_id.in_(professor_course_ids))
+    
+    exams = query.all()
+    
+    # Generate PDF file
+    pdf_data = generate_exams_pdf(exams, db)
+    
+    # Set response headers for file download
+    headers = {
+        'Content-Disposition': 'attachment; filename="exam_schedule.pdf"',
+        'Content-Type': 'application/pdf'
+    }
+    
+    return Response(content=pdf_data, headers=headers)
 
 @router.post("/auto-schedule", response_model=List[ExamResponse])
 def auto_schedule_exams(
