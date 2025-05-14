@@ -14,6 +14,9 @@ export const AuthProvider = ({ children }) => {
   // Load user on initial render if token exists
   useEffect(() => {
     const loadUser = async () => {
+      // Set loading to true while we check authentication
+      setLoading(true);
+      
       if (authService.isLoggedIn()) {
         try {
           const userData = await authService.getCurrentUser();
@@ -21,11 +24,19 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
         } catch (err) {
           console.error('Failed to load user:', err);
-          authService.logout(); // Clear invalid token
+          // Clear any invalid token
+          authService.logout();
           setError('Session expired. Please login again.');
           setIsAuthenticated(false);
+          setCurrentUser(null);
         }
+      } else {
+        // Make sure we reset state if no token exists
+        setIsAuthenticated(false);
+        setCurrentUser(null);
       }
+      
+      // Always set loading to false when done
       setLoading(false);
     };
 
@@ -36,34 +47,55 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
+    
+    // Clear any existing data first
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    authService.logout(); // Clear any existing token
+    
     try {
-      // First attempt to login and get token
+      // Step 1: Login and get token
+      console.log('Attempting to login with email:', email);
       const loginResponse = await authService.login(email, password);
-      console.log('Login successful, token received:', loginResponse);
+      console.log('Login successful, token received');
       
-      // Then fetch the user data
+      // Step 2: Fetch user data with the new token
       try {
+        console.log('Fetching user data...');
         const userData = await authService.getCurrentUser();
         console.log('User data fetched successfully:', userData);
+        
+        // Set user data and authentication state
         setCurrentUser(userData);
         setIsAuthenticated(true);
+        setLoading(false);
         return userData;
       } catch (userError) {
-        console.error('Error fetching user data after login:', userError);
-        // Even if we can't fetch user data, we're still authenticated with a token
-        setIsAuthenticated(true);
-        // Just set minimal user info based on email
-        const minimalUserData = { email: email };
+        console.error('Error fetching user data:', userError);
+        
+        // Even if we can't fetch complete user data, create minimal user info
+        // This prevents login loops by ensuring we have some user data
+        const minimalUserData = { 
+          email: email,
+          role: 'UNKNOWN' // Default role until we can fetch the actual role
+        };
+        
         setCurrentUser(minimalUserData);
+        setIsAuthenticated(true);
+        setLoading(false);
         return minimalUserData;
       }
     } catch (err) {
       console.error('Login failed:', err);
-      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      
+      // Clear everything on login failure
+      authService.logout();
+      setCurrentUser(null);
       setIsAuthenticated(false);
-      throw err;
-    } finally {
+      setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
       setLoading(false);
+      
+      throw err;
     }
   };
 
@@ -77,11 +109,12 @@ export const AuthProvider = ({ children }) => {
   // Context value
   const value = {
     currentUser,
+    isAuthenticated,
     loading,
     error,
-    isAuthenticated,
     login,
-    logout
+    logout,
+    token: authService.getToken() // Expose token for API calls
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

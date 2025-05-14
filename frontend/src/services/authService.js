@@ -24,6 +24,21 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Add response interceptor to handle token expiration
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // If we get a 401 Unauthorized error, clear the token
+    if (error.response && error.response.status === 401) {
+      console.warn('Received 401 Unauthorized, clearing token');
+      localStorage.removeItem('token');
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth service functions
 const authService = {
   // Login user
@@ -36,37 +51,46 @@ const authService = {
     formData.append('password', password);
     
     try {
-      console.log('Attempting login with:', { email, formData: formData.toString() });
+      console.log('Attempting login with:', { email });
       
-      // Use direct fetch API instead of axios for more control
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
+      // Use direct axios call with timeout to prevent hanging
+      const response = await axios.post(`${API_URL}/auth/login`, formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: formData.toString(),
+        timeout: 10000 // 10 second timeout
       });
       
-      console.log('Login response status:', response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Login failed:', errorData);
-        throw new Error(errorData.detail || 'Login failed');
+      // Check if we got a valid response
+      if (!response || !response.data) {
+        console.error('Invalid response from server');
+        throw new Error('Invalid response from server');
       }
       
-      const data = await response.json();
-      console.log('Login successful, received data:', data);
+      console.log('Login response received');
       
       // Store token in localStorage
-      if (data.access_token) {
-        localStorage.setItem('token', data.access_token);
-        return data;
+      if (response.data && response.data.access_token) {
+        const token = response.data.access_token;
+        console.log('Token received, storing in localStorage');
+        localStorage.setItem('token', token);
+        return response.data;
       } else {
+        console.error('No token in response:', response.data);
         throw new Error('No token received from server');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      // Clear token on error
+      localStorage.removeItem('token');
+      
+      if (error.response) {
+        console.error('Login error response:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('Login error - no response received:', error.request);
+      } else {
+        console.error('Login error:', error.message);
+      }
+      
       throw error;
     }
   },
@@ -75,26 +99,46 @@ const authService = {
   getCurrentUser: async () => {
     const token = localStorage.getItem('token');
     if (!token) {
+      console.warn('getCurrentUser called with no token in localStorage');
       return null;
     }
 
     try {
-      console.log('Fetching current user with token:', token);
-      const response = await fetch(`${API_URL}/users/me`, {
+      console.log('Fetching current user with token');
+      
+      // Use direct axios call with timeout to prevent hanging
+      const response = await axios.get(`${API_URL}/users/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        timeout: 5000 // 5 second timeout to prevent hanging
       });
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user: ${response.status}`);
+      // Validate the response
+      if (!response || !response.data) {
+        console.error('Invalid user data response');
+        throw new Error('Invalid user data response');
       }
       
-      const data = await response.json();
-      console.log('Current user response:', data);
-      return data;
+      console.log('Current user data received');
+      return response.data;
     } catch (error) {
-      console.error('Get current user error:', error);
+      // Handle different types of errors
+      if (error.response) {
+        console.error('Get user error response:', error.response.status, error.response.data);
+        
+        // If we get a 401 Unauthorized, the token is invalid or expired
+        if (error.response.status === 401) {
+          console.warn('Token is invalid or expired, clearing token from localStorage');
+          localStorage.removeItem('token');
+        }
+      } else if (error.request) {
+        console.error('Get user error - no response received:', error.request);
+        // Network error or timeout - don't clear token as it might be a temporary issue
+      } else {
+        console.error('Get user error:', error.message);
+      }
+      
       throw error;
     }
   },
@@ -106,8 +150,13 @@ const authService = {
 
   // Check if user is logged in
   isLoggedIn: () => {
-    return !!localStorage.getItem('token');
-  }
+    return localStorage.getItem('token') !== null;
+  },
+  
+  // Get the current token
+  getToken: () => {
+    return localStorage.getItem('token');
+  },
 };
 
 export default authService;

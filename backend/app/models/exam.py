@@ -21,11 +21,13 @@ class Exam(Base):
     sala_name = Column(String(50), ForeignKey("sala.name"), nullable=False)
     status = Column(Enum(ExamStatus), default=ExamStatus.PROPOSED, nullable=False)
     professor_agreement = Column(Boolean, default=False, nullable=False)
+    professor_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
     # Relationships
     course = relationship("Course", back_populates="exams")
     grupa = relationship("Grupa", back_populates="exams")
     sala = relationship("Sala", back_populates="exams")
+    professor = relationship("User", foreign_keys=[professor_id])
     
     def __repr__(self):
         return f"<Exam {self.course.name} for {self.grupa.name} on {self.date}>"

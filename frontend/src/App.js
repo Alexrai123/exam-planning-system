@@ -3,7 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/auth/Login';
 import TestLogin from './components/auth/TestLogin';
+import LoginBypass from './components/auth/LoginBypass';
+import DirectLoginTest from './components/auth/DirectLoginTest';
 import Dashboard from './components/Dashboard';
+import EmergencyDashboard from './components/EmergencyDashboard';
 import SimpleTestDashboard from './components/SimpleTestDashboard';
 import ForgotPassword from './components/auth/ForgotPassword';
 import Register from './components/auth/Register';
@@ -45,6 +48,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/test-login" element={<TestLogin />} />
+          <Route path="/emergency-login" element={<LoginBypass />} />
+          <Route path="/direct-login-test" element={<DirectLoginTest />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route 
@@ -63,6 +68,7 @@ function App() {
               </SimpleProtectedRoute>
             } 
           />
+          <Route path="/emergency-dashboard" element={<EmergencyDashboard />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

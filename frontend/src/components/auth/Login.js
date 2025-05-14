@@ -8,10 +8,11 @@ import './Login.css';
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, error: authError } = useAuth();
+  const { login, error: authError, currentUser } = useAuth();
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Check for success message in location state (e.g., after registration)
   useEffect(() => {
@@ -21,6 +22,14 @@ const Login = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (currentUser) {
+      console.log('User is logged in, redirecting to dashboard');
+      navigate('/dashboard');
+    }
+  }, [currentUser, navigate]);
 
   // Formik setup with Yup validation
   const formik = useFormik({
@@ -36,13 +45,23 @@ const Login = () => {
         .required('Password is required'),
     }),
     onSubmit: async (values) => {
+      if (isLoggingIn) return; // Prevent multiple submissions
+      
       try {
+        setIsLoggingIn(true);
         setError(null);
         setSuccessMessage(null);
+        
+        console.log('Attempting to log in with:', values.email);
         await login(values.email, values.password);
-        navigate('/dashboard');
+        
+        // If login is successful, we'll be redirected by the useEffect above
+        console.log('Login successful');
       } catch (err) {
+        console.error('Login error:', err);
         setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
+      } finally {
+        setIsLoggingIn(false);
       }
     },
   });

@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import './DashboardComponents.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faUserShield } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEdit, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
+import GroupLeadersUpload from '../groups/GroupLeadersUpload';
 
 const GroupsList = () => {
   const { currentUser } = useAuth();
@@ -16,7 +17,6 @@ const GroupsList = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showLeaderModal, setShowLeaderModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -104,21 +104,11 @@ const GroupsList = () => {
     setShowDeleteModal(true);
   };
 
-  const handleAssignLeader = (group) => {
-    setSelectedGroup(group);
-    setFormData({
-      ...formData,
-      leader_id: group.leader ? group.leader.id : ''
-    });
-    setShowLeaderModal(true);
-  };
-
   const closeModal = () => {
     setShowModal(false);
     setShowCreateModal(false);
     setShowEditModal(false);
     setShowDeleteModal(false);
-    setShowLeaderModal(false);
     setSelectedGroup(null);
     setError(null);
     setSuccess(null);
@@ -214,6 +204,7 @@ const GroupsList = () => {
   };
 
   // Check if user is secretariat
+  const isAdmin = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'SECRETARIAT');
   const isSecretariat = currentUser && currentUser.role === 'SECRETARIAT';
 
   return (
@@ -230,72 +221,60 @@ const GroupsList = () => {
         )}
       </div>
 
-      {loading ? (
-        <div className="loading">Loading groups...</div>
-      ) : error && !success ? (
-        <div className="error-message">{error}</div>
-      ) : groups.length === 0 ? (
-        <div className="empty-state">
-          <p>No groups found.</p>
-          {isSecretariat && (
-            <button 
-              className="action-button create-button"
-              onClick={handleCreateGroup}
-            >
-              <FontAwesomeIcon icon={faPlus} /> Create Group
-            </button>
-          )}
+      {/* Group Leaders Upload - only for secretariat users */}
+      {isSecretariat && (
+        <div className="section-container">
+          <div className="section-header">
+            <h3><FontAwesomeIcon icon={faUsers} /> Group Leaders Management</h3>
+            <p>Upload a list of group leaders (name and @student.usv.ro email)</p>
+          </div>
+          <GroupLeadersUpload onUploadComplete={fetchGroups} />
         </div>
-      ) : (
-        <div className="data-table">
-          <table>
+      )}
+
+      {/* Group list */}
+      <div className="data-table-container">
+        {loading ? (
+          <div className="loading">Loading groups...</div>
+        ) : error && !success ? (
+          <div className="error-message">{error}</div>
+        ) : groups.length === 0 ? (
+          <div className="empty-state">
+            <p>No groups found.</p>
+            {isSecretariat && (
+              <button 
+                className="action-button create-button"
+                onClick={handleCreateGroup}
+              >
+                <FontAwesomeIcon icon={faPlus} /> Create Group
+              </button>
+            )}
+          </div>
+        ) : (
+          <table className="data-table">
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Year</th>
                 <th>Specialization</th>
                 <th>Group Leader</th>
-                {isSecretariat && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
-              {groups.map(group => (
+              {groups.map((group) => (
                 <tr key={group.name}>
                   <td>{group.name}</td>
-                  <td>{group.year || '-'}</td>
-                  <td>{group.specialization || '-'}</td>
-                  <td>{group.leader ? `${group.leader.name} (${group.leader.email})` : 'None'}</td>
-                  {isSecretariat && (
-                    <td className="actions-cell">
-                      <button 
-                        className="action-button edit-button"
-                        onClick={() => handleEditGroup(group)}
-                        title="Edit Group"
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <button 
-                        className="action-button delete-button"
-                        onClick={() => handleDeleteGroup(group)}
-                        title="Delete Group"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                      <button 
-                        className="action-button leader-button"
-                        onClick={() => handleAssignLeader(group)}
-                        title="Assign Group Leader"
-                      >
-                        <FontAwesomeIcon icon={faUserShield} />
-                      </button>
-                    </td>
-                  )}
+                  <td>{group.year || 'N/A'}</td>
+                  <td>{group.specialization || 'N/A'}</td>
+                  <td>
+                    {group.leader ? group.leader.name : 'Not assigned'}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Create/Edit Group Modal */}
       {(showCreateModal || showEditModal) && (
@@ -402,59 +381,7 @@ const GroupsList = () => {
         </div>
       )}
 
-      {/* Assign Group Leader Modal */}
-      {showLeaderModal && selectedGroup && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Assign Group Leader</h3>
-              <button className="close-button" onClick={closeModal}>×</button>
-            </div>
-            <form onSubmit={assignLeader}>
-              <div className="modal-body">
-                {success && <div className="success-message">{success}</div>}
-                {error && <div className="error-message">{error}</div>}
-                
-                <p>Select a student to be the leader for group "{selectedGroup.name}":</p>
-                
-                <div className="form-group">
-                  <label htmlFor="leader_id">Group Leader</label>
-                  <select
-                    id="leader_id"
-                    name="leader_id"
-                    value={formData.leader_id}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select a student</option>
-                    {students.map(student => (
-                      <option key={student.id} value={student.id}>
-                        {student.name} ({student.email})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button 
-                  type="submit"
-                  className="action-button save-button"
-                  disabled={loading}
-                >
-                  {loading ? 'Assigning...' : 'Assign Leader'}
-                </button>
-                <button 
-                  type="button"
-                  className="action-button cancel-button"
-                  onClick={closeModal}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

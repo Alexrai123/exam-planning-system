@@ -30,3 +30,13 @@ def get_password_hash(password: str) -> str:
     Hash a password
     """
     return pwd_context.hash(password)
+
+def decode_token(token: str) -> dict:
+    """
+    Decode a JWT token and return the payload
+    """
+    return jwt.decode(
+        token, 
+        settings.JWT_SECRET_KEY, 
+        algorithms=[settings.ALGORITHM]
+    )

@@ -7,6 +7,7 @@ from ..models.exam import Exam
 from ..models.course import Course
 from ..models.grupa import Grupa
 from ..models.sala import Sala
+from ..models.faculty import Faculty
 
 def generate_exams_excel(exams: List[Exam], db: Session) -> bytes:
     """
@@ -27,6 +28,32 @@ def generate_exams_excel(exams: List[Exam], db: Session) -> bytes:
             # Get related data
             course = db.query(Course).filter(Course.id == exam.course_id).first()
             
+            # Get faculty information if available
+            faculty_name = "N/A"
+            specialization_name = "N/A"
+            
+            if course and hasattr(course, 'faculty_id') and course.faculty_id:
+                # Get faculty name
+                faculty = db.query(Faculty).filter(Faculty.id == course.faculty_id).first()
+                if faculty:
+                    faculty_name = faculty.name
+                
+                # Set a default specialization name based on course name if possible
+                if course.name and ':' in course.name:
+                    # If course name has format like "Specialization: Course Name", extract specialization
+                    specialization_name = course.name.split(':', 1)[0].strip()
+                elif course.name and '-' in course.name:
+                    # If course name has format like "Specialization - Course Name", extract specialization
+                    specialization_name = course.name.split('-', 1)[0].strip()
+            
+            # Format the status (remove the enum prefix if present)
+            status_value = str(exam.status)
+            if status_value and '.' in status_value:
+                status_value = status_value.split('.')[-1]  # Get the part after the last dot
+            
+            # Capitalize the status for better presentation
+            status_value = status_value.capitalize()
+            
             # Format the exam data for Excel
             exam_row = {
                 'ID': exam.id,
@@ -35,9 +62,10 @@ def generate_exams_excel(exams: List[Exam], db: Session) -> bytes:
                 'Course': course.name if course else f"Course {exam.course_id}",
                 'Room': exam.sala_name,
                 'Group': exam.grupa_name,
-                'Status': exam.status,
+                'Status': status_value,
                 'Professor': course.profesor_name if course and hasattr(course, 'profesor_name') else 'N/A',
-                'Faculty': getattr(course, 'faculty_name', 'N/A') if course else 'N/A'
+                'Faculty': faculty_name,
+                'Specialization': specialization_name
             }
             
             exam_data.append(exam_row)

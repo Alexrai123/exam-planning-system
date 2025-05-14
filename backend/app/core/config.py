@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Sistem informatic pentru planificarea examenelor"
     
     # CORS Settings
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8080"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:3000", "http://127.0.0.1:8000", "http://127.0.0.1:49960"]
     
     # JWT Settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your_secret_key_here")

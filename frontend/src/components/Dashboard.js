@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import robustApi from '../utils/robustApi';
 import './Dashboard.css';
 
 // Dashboard components
@@ -38,11 +38,7 @@ const Dashboard = () => {
         // Try to get user data if not already available
         if (!currentUser || !currentUser.name) {
           try {
-            const userResponse = await axios.get('http://localhost:8000/api/v1/users/me', {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            });
+            const userResponse = await robustApi.get('/users/me');
             setUserData(userResponse.data);
           } catch (userErr) {
             console.error('Error fetching user data:', userErr);
@@ -60,19 +56,13 @@ const Dashboard = () => {
         // Fetch dashboard stats
         try {
           // Fetch exams count
-          const examsResponse = await axios.get('http://localhost:8000/api/v1/exams/', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const examsResponse = await robustApi.get('/exams/');
           
           // Fetch courses count
-          const coursesResponse = await axios.get('http://localhost:8000/api/v1/courses/', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const coursesResponse = await robustApi.get('/courses/');
           
           // Fetch rooms count
-          const roomsResponse = await axios.get('http://localhost:8000/api/v1/rooms/', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const roomsResponse = await robustApi.get('/rooms/');
           
           // If user is a professor, filter exams to only show those related to their courses
           let filteredExamsCount = examsResponse.data.length || 0;
@@ -138,6 +128,14 @@ const Dashboard = () => {
         return <UserProfile userData={userData} />;
       case 'calendar':
         return <CalendarView />;
+      case 'templates':
+        // Dynamically import the Templates component
+        const Templates = React.lazy(() => import('../pages/Templates'));
+        return (
+          <React.Suspense fallback={<div>Loading templates...</div>}>
+            <Templates />
+          </React.Suspense>
+        );
       default:
         return renderDashboardOverview();
     }
@@ -299,8 +297,8 @@ const Dashboard = () => {
                 <i className="fas fa-calendar-alt"></i> Exams
               </button>
             </li>
-            {/* Only show Courses, Rooms, and Groups tabs for SECRETARIAT users */}
-            {(user.role === 'SECRETARIAT') && (
+            {/* Only show Courses, Rooms, and Groups tabs for SECRETARIAT and ADMIN users */}
+            {(user.role === 'SECRETARIAT' || user.role === 'ADMIN') && (
               <>
                 <li className={activeTab === 'courses' ? 'active' : ''}>
                   <button onClick={() => setActiveTab('courses')}>
@@ -315,6 +313,11 @@ const Dashboard = () => {
                 <li className={activeTab === 'groups' ? 'active' : ''}>
                   <button onClick={() => setActiveTab('groups')}>
                     <i className="fas fa-users"></i> Groups
+                  </button>
+                </li>
+                <li className={activeTab === 'templates' ? 'active' : ''}>
+                  <button onClick={() => setActiveTab('templates')}>
+                    <i className="fas fa-file-excel"></i> Templates
                   </button>
                 </li>
               </>

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response, BackgroundTasks
+from starlette.responses import Response
 from sqlalchemy.orm import Session
 from typing import List, Any, Optional
 from datetime import date, time
@@ -10,13 +11,79 @@ from ..models.course import Course
 from ..models.sala import Sala
 from ..models.grupa import Grupa
 from ..models.user import User, UserRole
-from ..schemas.exam import ExamResponse, ExamCreate, ExamUpdate, ExamStatusUpdate
-from ..routes.auth import get_current_user, is_secretariat, is_professor, is_group_leader
-from ..services.email import send_exam_notification
+from ..schemas.exam import ExamResponse, ExamCreate, ExamUpdate, ExamStatusUpdate, ProfessorAgreementUpdate
+from ..routes.auth import get_current_user, is_secretariat, is_professor, is_group_leader, is_student
+from ..services.email import send_exam_notification, send_exam_agreement_notification
 from ..services.excel import generate_exams_excel
 from ..services.pdf import generate_exams_pdf
 
 router = APIRouter(prefix="/exams", tags=["Exams"])
+
+@router.patch("/{exam_id}/agreement", response_model=ExamResponse)
+async def update_professor_agreement(
+    exam_id: int,
+    agreement: ProfessorAgreementUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(is_professor)
+):
+    """
+    Update professor agreement status for an exam.
+    Only professors can update their agreement status for exams related to their courses.
+    """
+    # Get the exam
+    exam = db.query(Exam).filter(Exam.id == exam_id).first()
+    if not exam:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Exam not found"
+        )
+    
+    # Get the course
+    course = db.query(Course).filter(Course.id == exam.course_id).first()
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    # Check if the professor is authorized to update this exam
+    try:
+        # Either they are the directly assigned professor or they are the course's professor
+        is_assigned_professor = hasattr(exam, 'professor_id') and exam.professor_id == current_user.id
+        is_course_professor = course.profesor_id == current_user.id
+        
+        if not (is_assigned_professor or is_course_professor):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only update agreement status for exams where you are the assigned professor"
+            )
+    except Exception as e:
+        # If professor_id field doesn't exist, fall back to checking only the course professor
+        print(f"Note: professor_id field handling error in agreement: {str(e)}")
+        if course.profesor_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only update agreement status for your courses"
+            )
+    
+    # Update the agreement status
+    exam.professor_agreement = agreement.professor_agreement
+    
+    # If professor agrees, update the status to confirmed
+    if agreement.professor_agreement:
+        exam.status = ExamStatus.CONFIRMED
+    else:
+        # If professor disagrees, keep the status as proposed
+        # This allows the group leader to propose a new date
+        exam.status = ExamStatus.PROPOSED
+    
+    db.commit()
+    db.refresh(exam)
+    
+    # Send notification to group leader
+    await send_exam_agreement_notification(exam, db, agreement.professor_agreement)
+    
+    return exam
 
 @router.get("/", response_model=List[ExamResponse])
 def get_exams(
@@ -29,8 +96,15 @@ def get_exams(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
+    response: Response = None
 ) -> Any:
+    # Add CORS headers directly to this endpoint's response
+    if response:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept"
     """
     Retrieve exams with optional filtering. All authenticated users can access this endpoint.
     """
@@ -50,7 +124,50 @@ def get_exams(
         query = query.filter(Exam.date <= end_date)
     
     exams = query.offset(skip).limit(limit).all()
-    return exams
+    
+    # Create a list of exam responses with professor_name
+    exam_responses = []
+    for exam in exams:
+        # Create a dict from the exam model
+        exam_dict = {
+            "id": exam.id,
+            "course_id": exam.course_id,
+            "grupa_name": exam.grupa_name,
+            "date": exam.date,
+            "time": exam.time,
+            "sala_name": exam.sala_name,
+            "status": exam.status,
+            "professor_agreement": exam.professor_agreement,
+            "professor_name": None  # Default value
+        }
+        
+        try:
+            # Try to get the professor name from the directly assigned professor if the field exists
+            if hasattr(exam, 'professor_id') and exam.professor_id:
+                professor = db.query(User).filter(User.id == exam.professor_id).first()
+                if professor:
+                    exam_dict["professor_name"] = professor.name
+                    
+            # If no direct professor or professor name not found, try the course's professor
+            if not exam_dict["professor_name"]:
+                course = db.query(Course).filter(Course.id == exam.course_id).first()
+                if course and course.profesor_id:
+                    professor = db.query(User).filter(User.id == course.profesor_id).first()
+                    if professor:
+                        exam_dict["professor_name"] = professor.name
+                        
+            # If still no professor name, set to N/A
+            if not exam_dict["professor_name"]:
+                exam_dict["professor_name"] = "N/A"
+                
+        except Exception as e:
+            # If there's an error getting the professor name, set to N/A
+            print(f"Error getting professor name for exam {exam.id}: {str(e)}")
+            exam_dict["professor_name"] = "N/A"
+            
+        exam_responses.append(exam_dict)
+    
+    return exam_responses
 
 @router.post("/", response_model=ExamResponse)
 def create_exam(
@@ -137,9 +254,25 @@ def create_exam(
     if is_leader:
         # Group leaders can only propose exams
         exam_data["status"] = ExamStatus.PROPOSED
+        # Set professor_agreement to False by default for proposed exams
+        exam_data["professor_agreement"] = False
     elif is_secretariat_user and not exam_data.get("status"):
         # Secretariat creates confirmed exams by default
         exam_data["status"] = ExamStatus.CONFIRMED
+        
+    # Handle professor_id field if it exists in the database schema
+    try:
+        # If professor_id is provided, use it directly
+        # Otherwise, try to get the professor from the course
+        if not exam_data.get("professor_id"):
+            course = db.query(Course).filter(Course.id == exam_data["course_id"]).first()
+            if course and course.profesor_id:
+                exam_data["professor_id"] = course.profesor_id
+    except Exception as e:
+        # If professor_id field doesn't exist in the database schema, remove it from the data
+        print(f"Note: professor_id field handling error: {str(e)}")
+        if "professor_id" in exam_data:
+            del exam_data["professor_id"]
     
     exam = Exam(**exam_data)
     db.add(exam)
@@ -252,9 +385,26 @@ def update_exam(
                     detail="Group already has an exam at the specified date and time"
                 )
         
-        # Update exam
+        # Handle professor_id specifically if it exists in the database schema
+        try:
+            if 'professor_id' in update_data and update_data['professor_id'] is not None:
+                # If a professor_id is provided, use it directly
+                exam.professor_id = update_data['professor_id']
+            elif 'course_id' in update_data and update_data['course_id'] is not None:
+                # If course_id is changed and no professor_id is provided, try to get the professor from the new course
+                course = db.query(Course).filter(Course.id == update_data['course_id']).first()
+                if course and course.profesor_id:
+                    exam.professor_id = course.profesor_id
+        except Exception as e:
+            # If professor_id field doesn't exist in the database schema, remove it from the data
+            print(f"Note: professor_id field handling error in update: {str(e)}")
+            if 'professor_id' in update_data:
+                del update_data['professor_id']
+        
+        # Update other fields
         for field, value in update_data.items():
-            setattr(exam, field, value)
+            if field != 'professor_id':  # Skip professor_id as we've already handled it
+                setattr(exam, field, value)
     
     db.add(exam)
     db.commit()
